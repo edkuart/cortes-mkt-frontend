@@ -126,12 +126,15 @@ export default function Home() {
 
         <div className="mt-12 w-full max-w-md">
           <h2 className="text-xl font-semibold mb-4">¿Tienes una pregunta sobre los cortes?</h2>
-          <textarea value={prompt} onChange={(e) => setPrompt(e.target.value)} placeholder="Escribe tu pregunta para la IA..." className="w-full border rounded-md p-3 mb-2" rows={3}></textarea>
-          <button onClick={handleIA} className="bg-blue-600 text-white font-semibold px-4 py-2 rounded-md" disabled={cargando}>
-            {cargando ? "Consultando..." : "Preguntar a la IA"}
-          </button>
-          {respuestaIA && <IAResponseBox prompt={prompt} setPrompt={setPrompt} respuesta={respuestaIA} cargando={cargando} onSubmit={handleIA} />}
+          <IAResponseBox
+            prompt={prompt}
+            setPrompt={setPrompt}
+            respuesta={respuestaIA}
+            cargando={cargando}
+            onSubmit={handleIA}
+          />
         </div>
+
       </main>
     </div>
   );

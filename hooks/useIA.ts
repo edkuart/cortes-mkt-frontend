@@ -1,4 +1,4 @@
-// 📁 hooks/UseAI.ts
+// 📁 hooks/useAI.ts
 
 export const api = async (endpoint: string, options = {}) =>
     fetch(`http://localhost:4000/api/${endpoint}`, {

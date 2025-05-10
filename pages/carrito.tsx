@@ -1,3 +1,5 @@
+// 📁 pages/carrito.tsx
+
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useRouter } from 'next/router';

@@ -1,3 +1,5 @@
+// 🧩 components/ReseñaBox.tsx
+
 import { useEffect, useState } from 'react';
 
 interface Reseña {
