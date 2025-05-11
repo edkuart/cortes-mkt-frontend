@@ -41,15 +41,33 @@ interface RankingData {
 export default function DashboardVendedor() {
   const { usuario, isAuthenticated } = useAuth();
   const [pedidos, setPedidos] = useState<Pedido[]>([]);
+  const [devoluciones, setDevoluciones] = useState<any[]>([]);
   const [resenas, setResenas] = useState<Resena[]>([]);
   const [ranking, setRanking] = useState<RankingData | null>(null);
   const [loading, setLoading] = useState(true);
   const [fechaInicio, setFechaInicio] = useState(dayjs().startOf('month').format('YYYY-MM-DD'));
   const [fechaFin, setFechaFin] = useState(dayjs().format('YYYY-MM-DD'));
   const [categoriasSeleccionadas, setCategoriasSeleccionadas] = useState<string[]>([]);
-  const [devoluciones, setDevoluciones] = useState([]);
 
-
+  const aceptarDevolucion = async (id: number) => {
+    try {
+      await fetch(`http://localhost:4000/api/devoluciones/${id}/aceptar`, { method: 'PATCH' });
+      setDevoluciones(devs => devs.filter(dev => dev.id !== id));
+      toast.success('Devolución aceptada');
+    } catch {
+      toast.error('Error al aceptar devolución');
+    }
+  };
+  
+  const rechazarDevolucion = async (id: number) => {
+    try {
+      await fetch(`http://localhost:4000/api/devoluciones/${id}/rechazar`, { method: 'PATCH' });
+      setDevoluciones(devs => devs.filter(dev => dev.id !== id));
+      toast.success('Devolución rechazada');
+    } catch {
+      toast.error('Error al rechazar devolución');
+    }
+  };
 
   const restablecerFechas = () => {
     setFechaInicio(dayjs().startOf('month').format('YYYY-MM-DD'));
@@ -99,7 +117,24 @@ export default function DashboardVendedor() {
       .then(setRanking)
       .catch(() => toast.error('Error al obtener ranking'));
   }, [usuario]);
- 
+
+  const enviarCorreoPrueba = async () => {
+    const res = await fetch('http://localhost:4000/api/notificaciones/correo', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        asunto: '📨 Correo de prueba desde el dashboard del vendedor',
+        contenido: 'Este es un correo de prueba enviado desde tu panel.'
+      }),
+    });
+  
+    if (res.ok) {
+      toast.success('Correo enviado correctamente');
+    } else {
+      toast.error('Error al enviar el correo');
+    }
+  };
+  
   const pedidosFiltrados = pedidos.filter(p =>
     (!fechaInicio || !dayjs(p.createdAt).isBefore(fechaInicio)) &&
     (!fechaFin || !dayjs(p.createdAt).isAfter(fechaFin))
@@ -172,6 +207,20 @@ export default function DashboardVendedor() {
         </label>
         <button onClick={restablecerFechas} className="px-3 py-1 bg-gray-300 rounded hover:bg-gray-400 text-sm">Restablecer fechas</button>
       </div>
+
+      <button
+        onClick={enviarCorreoPrueba}
+        className="mt-2 px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700"
+      >
+        📧 Enviar correo de prueba
+      </button>
+
+      <button
+        onClick={exportarResumenPDF}
+        className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+      >
+        📄 Exportar resumen a PDF
+      </button>
 
       <div className="mb-4 flex flex-wrap items-center gap-4">
         <label>Categorías:
@@ -280,28 +329,54 @@ export default function DashboardVendedor() {
             </tr>
             </thead>
             <tbody>
-            {[ // Datos simulados por ahora
-                { id: 1, producto: 'Traje Negro', motivo: 'Talla incorrecta', fecha: '2024-11-01' },
-                { id: 2, producto: 'Accesorio X', motivo: 'No es lo que esperaba', fecha: '2024-11-05' }
-            ].map(dev => (
-                <tr key={dev.id} className="border-t">
-                <td className="p-2">{dev.producto}</td>
-                <td className="p-2">{dev.motivo}</td>
-                <td className="p-2">{dayjs(dev.fecha).format('DD/MM/YYYY')}</td>
-                <td className="p-2 text-center space-x-2">
-                    <button className="bg-green-500 text-white px-2 py-1 rounded text-xs hover:bg-green-600">
-                    Aceptar
-                    </button>
-                    <button className="bg-red-500 text-white px-2 py-1 rounded text-xs hover:bg-red-600">
-                    Rechazar
-                    </button>
-                </td>
-                </tr>
-            ))}
-            </tbody>
-        </table>
-        </div>
+                {devoluciones.map(dev => (
+                    <tr key={dev.id} className="border-t">
+                    <td className="p-2">{dev.producto?.nombre || 'Producto'}</td>
+                    <td className="p-2">{dev.motivo}</td>
+                    <td className="p-2">{dayjs(dev.createdAt).format('DD/MM/YYYY')}</td>
 
+                    <td className="p-2 text-center space-x-2">
+                    <button
+                      onClick={() => aceptarDevolucion(dev.id)}
+                      className="bg-green-500 text-white px-2 py-1 rounded text-xs hover:bg-green-600"
+                    >
+                      Aceptar
+                    </button>
+                    <button
+                      onClick={() => rechazarDevolucion(dev.id)}
+                      className="bg-red-500 text-white px-2 py-1 rounded text-xs hover:bg-red-600"
+                    >
+                      Rechazar
+                    </button>
+
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <button
+              onClick={async () => {
+                const res = await fetch('http://localhost:4000/api/notificaciones/correo', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    asunto: '📨 Correo de prueba desde el marketplace',
+                    contenido: 'Este es un correo de prueba enviado desde el frontend.'
+                  }),
+                });
+
+                if (res.ok) {
+                  toast.success('Correo enviado correctamente');
+                } else {
+                  toast.error('Error al enviar el correo');
+                }
+              }}
+              className="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 mt-4"
+            >
+              📧 Enviar correo de prueba
+            </button>
 
       {loading ? <p>Cargando...</p> : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
