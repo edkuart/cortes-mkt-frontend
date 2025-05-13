@@ -1,9 +1,10 @@
-// 📁 pages/crearResenaPage.tsx
+// 📄 pages/mis-resenas.tsx
 
 import { useRouter } from 'next/router';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import toast, { Toaster } from 'react-hot-toast';
+import Estrellas from '@/components/Estrellas';
 
 export default function CrearResenaPage() {
   const router = useRouter();
@@ -11,10 +12,11 @@ export default function CrearResenaPage() {
   const { token } = useAuth();
 
   const [comentario, setComentario] = useState('');
-  const [calificacion, setCalificacion] = useState(5);
+  const [calificacion, setCalificacion] = useState(0);
   const [enviando, setEnviando] = useState(false);
 
   const enviarResena = async () => {
+    if (calificacion < 1 || calificacion > 5) return toast.error('Selecciona una calificación entre 1 y 5');
     if (!comentario.trim()) return toast.error('El comentario es obligatorio');
     if (!vendedorId || !pedidoId) return toast.error('Faltan datos del pedido o vendedor');
 
@@ -53,14 +55,9 @@ export default function CrearResenaPage() {
       <h1 className="text-2xl font-bold mb-4">✍️ Dejar Reseña</h1>
 
       <label className="block mb-2 font-medium">Calificación (1 a 5)</label>
-      <input
-        type="number"
-        min={1}
-        max={5}
-        value={calificacion}
-        onChange={(e) => setCalificacion(Number(e.target.value))}
-        className="border p-2 w-full rounded mb-4"
-      />
+      <div className="mb-4">
+        <Estrellas calificacion={calificacion} setCalificacion={setCalificacion} editable={true} />
+      </div>
 
       <label className="block mb-2 font-medium">Comentario</label>
       <textarea
@@ -79,6 +76,8 @@ export default function CrearResenaPage() {
     </div>
   );
 }
+
+
 
 
 
