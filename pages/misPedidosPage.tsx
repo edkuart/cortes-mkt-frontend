@@ -1,8 +1,9 @@
-// 📁 pages/mis-pedidos.tsx
+// 📁 pages/MisPedidosPage.tsx
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import toast, { Toaster } from 'react-hot-toast';
+import { useRouter } from 'next/router';
 
 interface Pedido {
   id: number;
@@ -10,6 +11,7 @@ interface Pedido {
   total: number;
   estadoTexto: string;
   mostrarBotonConfirmar: boolean;
+  vendedorId: number;
   detalles: {
     producto: {
       nombre: string;
@@ -115,6 +117,8 @@ export default function MisPedidosPage() {
     }
   };
 
+  const router = useRouter();
+
   return (
     <div className="max-w-3xl mx-auto p-6">
       <Toaster />
@@ -126,6 +130,18 @@ export default function MisPedidosPage() {
         <ul className="space-y-4">
           {pedidos.map((pedido) => (
             <li key={pedido.id} className="border rounded p-4">
+
+              {pedido.estadoTexto === 'Entregado' && (
+                <button
+                  onClick={() =>
+                    router.push(`/crear-resena?vendedorId=${pedido.vendedorId}&pedidoId=${pedido.id}`)
+                  }
+                  className="mt-2 px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm"
+                >
+                  Dejar reseña
+                </button>
+              )}
+
               {pedido.mostrarBotonConfirmar && (
                 <button
                   onClick={() => confirmarEntrega(pedido.id)}

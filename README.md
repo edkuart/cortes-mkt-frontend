@@ -41,6 +41,8 @@ frontend/
 │   ├── index.tsx
 │   ├── login.tsx
 │   ├── mis-pedidos.tsx
+│   ├── mis-resenas.tsx
+│   ├── crear-resena.tsx
 │   └── Pedidos-Vendedor.tsx
 ├── public/
 ├── services/
@@ -82,6 +84,8 @@ npm run dev
 - `/login` → Inicio de sesión
 - `/carrito` → Carrito de compras
 - `/mis-pedidos` → Historial del comprador
+- `/mis-resenas` → Lista de reseñas dejadas por el comprador
+- `/crear-resena` → Página para dejar una reseña
 
 ### Vendedor
 - `/dashboard-vendedor` → Resumen de ventas, reseñas y devoluciones
@@ -98,6 +102,10 @@ npm run dev
 - `IAResponseBox.tsx`: Interacción con la IA
 - `Layout.tsx`: Layout general del sitio
 - `ProductoForm.tsx`: Formulario de creación de productos
+- `ReseñasBox.tsx`: Muestra reseñas asociadas
+- `PedidoCard.tsx`: Visualiza pedidos de forma compacta
+- `PedidoForm.tsx`: Formulario de creación de pedidos
+- `ProductoCard.tsx`: Visualiza productos de forma individual
 
 ---
 
@@ -114,5 +122,3 @@ npm run dev
 Para dudas o soporte: [edkuart@gmail.com](mailto:edkuart@gmail.com)
 
 ✨ Proyecto en desarrollo activo, enfocado en integración backend-frontend y expansión móvil futura.
-
-git push origin main
