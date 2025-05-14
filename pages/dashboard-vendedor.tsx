@@ -48,6 +48,10 @@ export default function DashboardVendedor() {
   const [fechaInicio, setFechaInicio] = useState(dayjs().startOf('month').format('YYYY-MM-DD'));
   const [fechaFin, setFechaFin] = useState(dayjs().format('YYYY-MM-DD'));
   const [categoriasSeleccionadas, setCategoriasSeleccionadas] = useState<string[]>([]);
+  const [filtroFechaInicio, setFiltroFechaInicio] = useState('');
+  const [filtroFechaFin, setFiltroFechaFin] = useState('');
+  const [filtroTipo, setFiltroTipo] = useState('todas');
+
 
   const aceptarDevolucion = async (id: number) => {
     try {
@@ -89,8 +93,6 @@ export default function DashboardVendedor() {
       pdf.save('resumen-vendedor.pdf');
     });
   };
-
-  
 
   
   useEffect(() => {
@@ -378,6 +380,26 @@ export default function DashboardVendedor() {
               📧 Enviar correo de prueba
             </button>
 
+            <div className="flex flex-wrap items-center gap-4 mb-4">
+            <label>
+              Desde:
+              <input type="date" value={filtroFechaInicio} onChange={e => setFiltroFechaInicio(e.target.value)} className="ml-2 border px-2 py-1 rounded" />
+            </label>
+            <label>
+              Hasta:
+              <input type="date" value={filtroFechaFin} onChange={e => setFiltroFechaFin(e.target.value)} className="ml-2 border px-2 py-1 rounded" />
+            </label>
+            <label>
+              Tipo:
+              <select value={filtroTipo} onChange={e => setFiltroTipo(e.target.value)} className="ml-2 border px-2 py-1 rounded">
+                <option value="todas">Todas</option>
+                <option value="positivas">Positivas (≥ 4)</option>
+                <option value="regulares">Regulares (= 3)</option>
+                <option value="negativas">Negativas (≤ 2)</option>
+              </select>
+            </label>
+          </div>
+
       {loading ? <p>Cargando...</p> : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="bg-white shadow p-4 rounded">
@@ -439,10 +461,13 @@ export default function DashboardVendedor() {
             </div>
           )}
 
+          
+
           {resenas.length > 0 && (
             <div className="col-span-1 md:col-span-2 bg-white p-4 shadow rounded">
               <h2 className="text-lg font-semibold mb-2">Últimas reseñas</h2>
               <ul className="space-y-2">
+                
                 {resenas.slice(0, 5).map((r) => (
                   <li key={r.id} className="border-b pb-2">
                     <p className="text-sm text-gray-700">⭐ {r.calificacion} - "{r.comentario}"</p>

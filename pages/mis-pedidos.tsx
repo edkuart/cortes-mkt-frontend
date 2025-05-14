@@ -1,4 +1,4 @@
-// 📁 pages/MisPedidosPage.tsx
+// 📁 pages/mis-pedidos.tsx
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
