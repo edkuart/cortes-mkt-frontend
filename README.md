@@ -4,7 +4,7 @@ Este es el frontend del proyecto Marketplace Modular, desarrollado con **Next.js
 
 ---
 
-## 🚀 Tecnologías Utilizadas
+🚀 Tecnologías Utilizadas
 
 - Next.js
 - React
@@ -17,11 +17,12 @@ Este es el frontend del proyecto Marketplace Modular, desarrollado con **Next.js
 
 ---
 
-## 📁 Estructura del Proyecto
+📁 Estructura del Proyecto
 
 ```
 frontend/
 ├── components/
+│   ├── Estrellas.tsx ← ⭐ Calificación visual y emojis
 │   ├── IAResponseBox.tsx
 │   ├── Layout.tsx
 │   ├── PedidoCard.tsx
@@ -29,96 +30,130 @@ frontend/
 │   ├── ProductoCard.tsx
 │   ├── ProductoForm.tsx
 │   ├── ReseñasBox.tsx
-│   ├── Estrellas.tsx
 │   └── SolicitarDevolucion.tsx
 ├── hooks/
 │   ├── useAuth.ts
-│   └── useIA.ts
+│   ├── useIA.ts
+│   └── useResenasProducto.ts ← 🔁 Hook reutilizable de reseñas
 ├── pages/
 │   ├── api/
 │   ├── _app.tsx
 │   ├── _document.tsx
 │   ├── carrito.tsx
+│   ├── crear-resena.tsx
 │   ├── dashboard-vendedor.tsx
+│   ├── editar-resena.tsx ← ✏️ Editar y eliminar reseñas
 │   ├── ia.tsx
 │   ├── index.tsx
 │   ├── login.tsx
 │   ├── mis-pedidos.tsx
-│   ├── crear-resena.tsx
-│   └── mis-resenas.tsx
+│   ├── mis-resenas.tsx
+│   └── resenas-producto/[id].tsx ← Página pública de reseñas de producto
 ├── public/
 ├── services/
 │   └── apiService.ts
 ├── styles/
 │   └── globals.css
+├── utils/
+│   └── estrellas.ts ← 🎯 Icono dinámico según puntuación
 ├── .env.local
 ├── tailwind.config.js
 ├── tsconfig.json
-├── next.config.js
-└── package.json
+└── next.config.js
+
+
 ```
 
 ---
 
-## ⚙️ Configuración Inicial
+⚙️ Configuración Inicial
 
-1. Instalar dependencias:
-```bash
+    Instalar dependencias:
+
 npm install
-```
 
-2. Crear archivo `.env.local`:
-```env
+    Crear archivo .env.local:
+
 NEXT_PUBLIC_API_URL=http://localhost:4000
-```
 
-3. Iniciar el servidor de desarrollo:
-```bash
+    Iniciar el servidor de desarrollo:
+
 npm run dev
-```
+
+🔍 Páginas y Funcionalidades
+Cliente
+
+    /login → Inicio de sesión
+
+    /carrito → Ver carrito
+
+    /mis-pedidos → Ver historial de pedidos
+
+    /crear-resena → Escribir nueva reseña con estrellas animadas
+
+    /editar-resena → Editar o eliminar reseñas (si no han sido respondidas)
+
+    /mis-resenas → Listado de reseñas propias
+
+Vendedor
+
+    /dashboard-vendedor → Vista completa de ventas, calificaciones, evoluciones y devoluciones
+
+    Responder reseñas directamente desde el dashboard
+
+Público
+
+    /resenas-producto/[id] → Página para ver reseñas completas de un producto
+
+    Permite mostrar respuestas del vendedor como subcomentario
+
+Inteligencia Artificial
+
+    /ia → Chat con IA para sugerencias de productos
+
+✨ Componentes Destacados
+
+    Estrellas.tsx: Calificación visual con emojis, vibración y estado offline
+
+    useResenasProducto.ts: Hook para obtener reseñas y promedio reutilizable
+
+    ReseñasBox.tsx: Vista de últimas reseñas debajo del producto
+
+    moderacionService.ts: Verifica y limpia contenido ofensivo antes de enviarlo
+
+    utils/estrellas.ts: Función para renderizar estrella, estrella media o vacía
+
+
 
 ---
 
-## 🔍 Páginas y Funcionalidades
+## ✨ Funcionalidades Clave
 
-### Cliente
-- `/` → Página principal
-- `/login` → Inicio de sesión
-- `/carrito` → Carrito de compras
-- `/mis-pedidos` → Historial del comprador
-- `/crear-resena` → Enviar reseña con calificación animada
-- `/mis-resenas` → Ver todas las reseñas creadas
-
-### Vendedor
-- `/dashboard-vendedor` → Resumen de ventas, reseñas y devoluciones
-- `/Pedidos-Vendedor` → Gestión de pedidos
-
-### Inteligencia Artificial
-- `/ia` → Chat con IA para sugerencias de productos
+- ⭐ **Componente interactivo de estrellas** (vibración, emojis, media estrella)
+- ✍️ **Edición/eliminación de reseñas** con validación de tiempo
+- 💬 **Respuesta del vendedor a reseñas**
+- 🚫 **Moderación de respuestas** (insultos bloqueados)
+- 📈 **Dashboard del vendedor** con comparativas y ranking
+- 📄 **Exportar gráficos y resumen PDF**
 
 ---
 
-## ✨ Componentes Relevantes
+🛠 Notas Adicionales
 
-- `Estrellas.tsx`: Calificación visual e interactiva (soporta media estrella, emojis, colores y animación)
-- `SolicitarDevolucion.tsx`: Solicitud de devoluciones
-- `IAResponseBox.tsx`: Interacción con la IA
-- `Layout.tsx`: Layout general del sitio
-- `ProductoForm.tsx`: Formulario de creación de productos
+    Todas las reseñas pueden incluir respuestas de los vendedores
 
----
+    Las respuestas aparecen como subcomentarios en el frontend
 
-## 🛠 Notas
+    Si se detecta una palabra ofensiva en una reseña o respuesta, se bloquea automáticamente con mensaje de error
 
-- Las llamadas a la API utilizan `fetch` apuntando a `http://localhost:4000`.
-- Las rutas están organizadas para separar roles (cliente / vendedor).
-- Estrellas ahora incluyen animación, emojis y vibración (si está disponible).
-- Las calificaciones se guardan localmente si no hay conexión.
+    Las estrellas funcionan offline y guardan temporalmente la calificación si no hay red
+
+    Todo es modular para su futura integración en React Native
 
 ---
 
 ## 📬 Contacto
 
-Para dudas o soporte: [edkuart@gmail.com](mailto:edkuart@gmail.com)
+Para dudas o sugerencias: [edkuart@gmail.com](mailto:edkuart@gmail.com)
 
-✨ Proyecto en desarrollo activo, enfocado en integración backend-frontend, experiencia móvil e interactividad visual avanzada.
+✨ Proyecto en desarrollo continuo, con enfoque en experiencia de usuario, visualización clara y escalabilidad. Se planea integrar reputación de vendedor, insignias y filtros por reseña próximamente.

@@ -1,33 +1,21 @@
 // 📄 components/Estrellas.tsx
 
 import { useEffect, useState } from 'react';
-import {
-  FaStar,
-  FaStarHalfAlt,
-  FaRegStar,
-  FaGrinStars,
-  FaFrown,
-  FaMeh,
-  FaSmile,
-  FaLaugh,
-} from 'react-icons/fa';
+import { getEmoji, getTexto, renderIcon } from '@/utils/estrellas';
 
 interface EstrellasProps {
   calificacion: number;
-  setCalificacion?: (valor: number) => void;
+  onChange?: (valor: number) => void;
   editable?: boolean;
   maximo?: number;
 }
 
-export default function Estrellas({ calificacion, setCalificacion, editable = false, maximo = 5 }: EstrellasProps) {
+export default function Estrellas({ calificacion, onChange, editable = false, maximo = 5 }: EstrellasProps) {
   const [hover, setHover] = useState<number | null>(null);
   const [animacion, setAnimacion] = useState(false);
   const [offlineRating, setOfflineRating] = useState<number | null>(null);
 
   const colores = ['text-red-400', 'text-orange-400', 'text-yellow-400', 'text-lime-400', 'text-green-500'];
-  const emojis = [<FaFrown />, <FaMeh />, <FaSmile />, <FaLaugh />, <FaGrinStars />];
-  const textos = ['Terrible', 'Malo', 'Regular', 'Bueno', 'Excelente'];
-
   const valor = hover ?? calificacion;
 
   const playFeedback = () => {
@@ -36,14 +24,18 @@ export default function Estrellas({ calificacion, setCalificacion, editable = fa
     setTimeout(() => setAnimacion(false), 400);
   };
 
+  const guardarOffline = (valor: number) => {
+    setOfflineRating(valor);
+    localStorage.setItem('resenaOffline', JSON.stringify(valor));
+  };
+
   const handleSetCalificacion = (valor: number) => {
     playFeedback();
     if (!navigator.onLine) {
-      setOfflineRating(valor);
-      localStorage.setItem('resenaOffline', JSON.stringify(valor));
+      guardarOffline(valor);
       return;
     }
-    setCalificacion?.(valor);
+    onChange?.(valor);
   };
 
   useEffect(() => {
@@ -52,14 +44,6 @@ export default function Estrellas({ calificacion, setCalificacion, editable = fa
       if (guardado) setOfflineRating(parseFloat(guardado));
     }
   }, []);
-
-  const renderIcon = (i: number) => {
-    const current = valor;
-    const floor = Math.floor(current);
-    const showHalf = current % 1 >= 0.5 && i === floor;
-    if (showHalf) return <FaStarHalfAlt />;
-    return i < current ? <FaStar /> : <FaRegStar />;
-  };
 
   return (
     <div className={`flex flex-col items-start gap-2 ${animacion ? 'animate-ping-once' : ''}`}>
@@ -76,7 +60,7 @@ export default function Estrellas({ calificacion, setCalificacion, editable = fa
               onMouseEnter={() => editable && setHover(i + 1)}
               onMouseLeave={() => editable && setHover(null)}
             >
-              {renderIcon(i)}
+              {renderIcon(i, valor)}
             </span>
           );
         })}
@@ -84,8 +68,8 @@ export default function Estrellas({ calificacion, setCalificacion, editable = fa
 
       <div className="flex items-center gap-3 text-sm text-gray-700 mt-1 animate-fade-in">
         <span className="font-medium">{valor} de {maximo}</span>
-        <span className="text-xl">{emojis[Math.max(0, Math.ceil(valor) - 1)]}</span>
-        <span className="italic text-gray-500">{textos[Math.max(0, Math.ceil(valor) - 1)]}</span>
+        <span className="text-xl">{getEmoji(valor)}</span>
+        <span className="italic text-gray-500">{getTexto(valor)}</span>
       </div>
     </div>
   );
@@ -93,7 +77,3 @@ export default function Estrellas({ calificacion, setCalificacion, editable = fa
 
 
 
-
-
-  
-  

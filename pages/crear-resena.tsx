@@ -1,98 +1,114 @@
-// 📁 pages/crear-resena.tsx
+// 📄 pages/crear-resena.tsx
 
-import { useRouter } from 'next/router';
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
+import { useRouter } from 'next/router';
 import toast, { Toaster } from 'react-hot-toast';
 import Estrellas from '@/components/Estrellas';
 
-export default function CrearResenaPage() {
-  const router = useRouter();
-  const { vendedorId, pedidoId } = router.query;
+const CrearResena = () => {
   const { usuario, token } = useAuth();
-
+  const [pedidoId, setPedidoId] = useState('');
   const [comentario, setComentario] = useState('');
   const [calificacion, setCalificacion] = useState(5);
-  const [enviando, setEnviando] = useState(false);
-  const [cargando, setCargando] = useState(true);
+  const [puedeResenar, setPuedeResenar] = useState(false);
+  const [verificando, setVerificando] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
-    const verificarResena = async () => {
-      if (!vendedorId || !pedidoId) return;
-      try {
-        const res = await fetch(`http://localhost:4000/api/resenas/verificar/${usuario?.id}/${pedidoId}`);
-        const data = await res.json();
-        if (data.yaExiste) {
-          toast.error('Ya has dejado una reseña para este pedido.');
-          router.push('/mis-resenas');
-        }
-      } catch (error) {
-        console.error('Error al verificar reseña existente:', error);
-      } finally {
-        setCargando(false);
-      }
-    };
-    verificarResena();
-  }, [vendedorId, pedidoId]);
+    if (usuario && pedidoId) {
+      setVerificando(true);
+      fetch(`http://localhost:4000/api/resenas/verificar/${usuario.id}/${pedidoId}`)
+        .then(res => res.json())
+        .then(data => setPuedeResenar(!data.yaExiste))
+        .catch(() => toast.error('Error al verificar reseña'))
+        .finally(() => setVerificando(false));
+    }
+  }, [pedidoId]);
 
   const enviarResena = async () => {
-    if (!comentario.trim()) return toast.error('El comentario es obligatorio');
-    if (!vendedorId || !pedidoId) return toast.error('Faltan datos del pedido o vendedor');
+    if (!pedidoId || !comentario || calificacion < 1 || calificacion > 5) {
+      return toast.error('Completa todos los campos correctamente');
+    }
 
-    setEnviando(true);
     try {
       const res = await fetch('http://localhost:4000/api/resenas', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
-          vendedorId: parseInt(vendedorId as string),
-          pedidoId: parseInt(pedidoId as string),
+          pedidoId,
+          vendedorId: 1, // temporal hasta automatizar
           comentario,
-          calificacion,
+          calificacion
         })
       });
 
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.mensaje);
-
-      toast.success('Reseña enviada con éxito');
-      router.push('/mis-pedidos');
+      if (res.ok) {
+        toast.success('Reseña enviada');
+        router.push('/mis-resenas');
+      } else {
+        const data = await res.json();
+        toast.error(data.mensaje || 'Error al enviar reseña');
+      }
     } catch (err) {
-      toast.error('Error al enviar la reseña');
-      console.error(err);
-    } finally {
-      setEnviando(false);
+      toast.error('Error del servidor');
     }
   };
 
   return (
-    <div className="max-w-xl mx-auto p-6">
+    <div className="max-w-xl mx-auto p-4">
       <Toaster />
-      <h1 className="text-2xl font-bold mb-4">✍️ Dejar Reseña</h1>
+      <h1 className="text-xl font-bold mb-4">📝 Crear Reseña</h1>
 
-      <label className="block mb-2 font-medium">Calificación</label>
-      <Estrellas calificacion={calificacion} setCalificacion={setCalificacion} editable />
+      <label className="block mb-2">
+        ID del pedido:
+        <input
+          type="text"
+          value={pedidoId}
+          onChange={e => setPedidoId(e.target.value)}
+          className="border p-2 w-full rounded"
+        />
+      </label>
 
-      <label className="block mt-4 mb-2 font-medium">Comentario</label>
-      <textarea
-        className="border p-2 w-full h-32 rounded mb-4"
-        value={comentario}
-        onChange={(e) => setComentario(e.target.value)}
-      />
+      {verificando && <p className="text-sm text-gray-500">Verificando posibilidad de reseñar...</p>}
+      {!verificando && !puedeResenar && pedidoId && (
+        <p className="text-red-500 text-sm">⚠ Ya dejaste una reseña para este pedido.</p>
+      )}
 
-      <button
-        onClick={enviarResena}
-        disabled={enviando || cargando}
-        className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-      >
-        {enviando ? 'Enviando...' : 'Enviar Reseña'}
-      </button>
+      {puedeResenar && (
+        <>
+          <label className="block mb-2">
+            Comentario:
+            <textarea
+              value={comentario}
+              onChange={e => setComentario(e.target.value)}
+              className="border p-2 w-full rounded"
+              rows={3}
+            />
+          </label>
+
+          <label className="block mb-4">
+            Calificación:
+            <Estrellas calificacion={calificacion} onChange={setCalificacion} editable />
+          </label>
+
+          <button
+            onClick={enviarResena}
+            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+          >
+            Enviar reseña
+          </button>
+        </>
+      )}
     </div>
   );
-}
+};
+
+export default CrearResena;
+
 
 
 
