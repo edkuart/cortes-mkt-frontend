@@ -123,8 +123,6 @@ Inteligencia Artificial
 
     utils/estrellas.ts: Función para renderizar estrella, estrella media o vacía
 
-
-
 ---
 
 ## ✨ Funcionalidades Clave

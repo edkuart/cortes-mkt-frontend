@@ -8,12 +8,24 @@ interface Props {
   onGuardado: (texto: string) => void;
 }
 
+const LIMITE_CARACTERES = 280;
+
 export default function ResponderResenaBox({ resenaId, onGuardado }: Props) {
   const [respuesta, setRespuesta] = useState('');
   const [cargando, setCargando] = useState(false);
 
+  const caracteresUsados = respuesta.length;
+  const sePasoDelLimite = caracteresUsados > LIMITE_CARACTERES;
+
   const guardarRespuesta = async () => {
-    if (!respuesta.trim()) return toast.error('La respuesta no puede estar vacía');
+    if (!respuesta.trim()) {
+      return toast.error('La respuesta no puede estar vacía');
+    }
+
+    if (sePasoDelLimite) {
+      return toast.error(`Máximo permitido: ${LIMITE_CARACTERES} caracteres`);
+    }
+
     setCargando(true);
     try {
       const res = await fetch(`http://localhost:4000/api/resenas/${resenaId}/respuesta`, {
@@ -23,6 +35,7 @@ export default function ResponderResenaBox({ resenaId, onGuardado }: Props) {
       });
 
       if (!res.ok) throw new Error('Error al guardar la respuesta');
+
       onGuardado(respuesta);
       toast.success('Respuesta guardada');
       setRespuesta('');
@@ -39,16 +52,22 @@ export default function ResponderResenaBox({ resenaId, onGuardado }: Props) {
         value={respuesta}
         onChange={e => setRespuesta(e.target.value)}
         className="w-full border rounded p-2 text-sm"
-        rows={2}
+        rows={3}
         placeholder="Responder a esta reseña..."
       />
-      <button
-        onClick={guardarRespuesta}
-        disabled={cargando}
-        className="mt-1 px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm"
-      >
-        {cargando ? 'Guardando...' : 'Responder'}
-      </button>
+      <div className="flex justify-between items-center mt-1">
+        <span className={`text-xs ${sePasoDelLimite ? 'text-red-600' : 'text-gray-500'}`}>
+          {caracteresUsados}/{LIMITE_CARACTERES}
+        </span>
+        <button
+          onClick={guardarRespuesta}
+          disabled={cargando || !respuesta.trim() || sePasoDelLimite}
+          className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm disabled:opacity-50"
+        >
+          {cargando ? 'Guardando...' : 'Responder'}
+        </button>
+      </div>
     </div>
   );
 }
+

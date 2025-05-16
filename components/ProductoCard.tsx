@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import Estrellas from './Estrellas';
+import InsigniasVendedor from './InsigniasVendedor';
 
 interface Resena {
   id: number;
@@ -23,6 +24,7 @@ interface ProductoCardProps {
   onEliminar?: (id: number) => void;
   destacado?: boolean;
   filtroTipo?: string;
+  vendedorId?: number;
 }
 
 const filtrarResenas = (resenas: Resena[], filtroTipo: string): Resena[] => {
@@ -99,9 +101,10 @@ const ProductoCard: React.FC<ProductoCardProps> = ({
   onEliminar,
   destacado = false,
   filtroTipo = 'todas',
+  vendedorId,
 }) => {
   const { promedio, cantidad, ultimasFiltradas, refetch } = useResenasProducto(id, filtroTipo);
-
+  
   return (
     <div className={`border rounded shadow p-4 relative ${destacado ? 'bg-yellow-50 border-yellow-400' : 'bg-white'}`}>
       {imagen && (
@@ -129,6 +132,7 @@ const ProductoCard: React.FC<ProductoCardProps> = ({
           </Link>
           {ultimasFiltradas.length > 0 && (
             <div className="mt-2 bg-gray-50 border border-gray-200 rounded p-2 text-sm text-gray-700 space-y-2">
+              <InsigniasVendedor vendedorId={vendedorId} />
               {ultimasFiltradas.map((r) => (
                 <div key={r.id}>
                   <p className="font-medium text-yellow-700">⭐ {r.calificacion} - {r.Usuario?.nombreCompleto || 'Cliente'}</p>

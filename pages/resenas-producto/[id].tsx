@@ -1,21 +1,29 @@
-// 📁 page/resenas-producto/[id].tsx
+// 📄 pages/resenas-producto/[id].tsx
 
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import Estrellas from '@/components/Estrellas';
 import ResponderResenaBox from '@/components/ResponderResenaBox';
 import toast, { Toaster } from 'react-hot-toast';
-import palabrasProhibidas from '@/utils/palabrasProhibidas';
+import palabrasProhibidas from '@/utils/palabrasProhibidas.json';
 
 interface Resena {
   id: number;
   comentario: string;
   calificacion: number;
   createdAt: string;
+  vendedorId: number;
   Usuario?: {
     nombreCompleto: string;
+    id: number;
   };
   respuestaVendedor?: string;
+}
+
+interface Ranking {
+  promedioCalificacion: number;
+  ventasTotales: number;
+  montoTotal: number;
 }
 
 function contieneInsultos(texto: string): boolean {
@@ -49,6 +57,7 @@ export default function ResenasPorProducto() {
   const router = useRouter();
   const { id } = router.query;
   const [resenas, setResenas] = useState<Resena[]>([]);
+  const [ranking, setRanking] = useState<Ranking | null>(null);
 
   useEffect(() => {
     if (!id) return;
@@ -59,6 +68,15 @@ export default function ResenasPorProducto() {
         if (!res.ok) throw new Error('Error al obtener reseñas');
         const data = await res.json();
         setResenas(data);
+
+        if (data.length > 0) {
+          const vendedorId = data[0].vendedorId;
+          const rankingRes = await fetch(`http://localhost:4000/api/vendedores/${vendedorId}/ranking`);
+          if (rankingRes.ok) {
+            const rankingData = await rankingRes.json();
+            setRanking(rankingData);
+          }
+        }
       } catch (error) {
         toast.error('No se pudieron cargar las reseñas');
         console.error(error);
@@ -80,6 +98,32 @@ export default function ResenasPorProducto() {
       <Toaster />
       <h1 className="text-2xl font-bold mb-4">🗣 Reseñas del Producto</h1>
 
+      {ranking && (
+        <div className="mb-4 p-4 border rounded bg-white shadow text-sm text-gray-700">
+          <p><strong>⭐ Calificación del vendedor:</strong> {ranking.promedioCalificacion.toFixed(2)} / 5</p>
+          <p><strong>🛍️ Ventas:</strong> {ranking.ventasTotales}</p>
+          <p><strong>💰 Monto total:</strong> Q{ranking.montoTotal.toFixed(2)}</p>
+
+          {ranking.promedioCalificacion >= 4.5 && (
+            <div className="mt-2 inline-block bg-yellow-100 text-yellow-800 text-xs px-3 py-1 rounded-full shadow-sm">
+              🏅 Vendedor Muy Valorad@
+            </div>
+          )}
+
+          {ranking.ventasTotales >= 100 && (
+            <div className="mt-2 inline-block bg-green-100 text-green-800 text-xs px-3 py-1 rounded-full shadow-sm">
+              🥇 Top en Ventas
+            </div>
+          )}
+
+          {ranking.montoTotal >= 10000 && (
+            <div className="mt-2 inline-block bg-purple-100 text-purple-800 text-xs px-3 py-1 rounded-full shadow-sm">
+              💼 Vendedor Élite
+            </div>
+          )}
+        </div>
+      )}
+
       {resenas.length === 0 ? (
         <p className="text-gray-600">Este producto aún no tiene reseñas.</p>
       ) : (
@@ -95,9 +139,14 @@ export default function ResenasPorProducto() {
                 <p className="text-sm text-gray-700">Cliente: {r.Usuario.nombreCompleto}</p>
               )}
               {r.respuestaVendedor ? (
-                <div className="mt-3 p-3 bg-blue-100 border border-blue-300 rounded text-sm text-blue-900 shadow-sm">
-                  <strong className="block mb-1">Respuesta del vendedor:</strong>
-                  <p className="whitespace-pre-line leading-relaxed">{r.respuestaVendedor}</p>
+                <div className="mt-4 flex gap-3 items-start bg-blue-50 border border-blue-200 rounded-lg p-3 shadow-sm">
+                  <div className="flex-shrink-0 text-blue-600 text-xl">
+                    💬
+                  </div>
+                  <div className="text-sm text-blue-900">
+                    <p className="font-semibold mb-1">Respuesta del vendedor</p>
+                    <p className="whitespace-pre-line leading-relaxed">{r.respuestaVendedor}</p>
+                  </div>
                 </div>
               ) : (
                 <ResponderResenaBox
@@ -112,4 +161,3 @@ export default function ResenasPorProducto() {
     </div>
   );
 }
-

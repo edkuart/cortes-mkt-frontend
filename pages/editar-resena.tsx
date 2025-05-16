@@ -1,7 +1,9 @@
 // 🧩 pages/editar-resena.tsx 
+
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import Estrellas from '@/components/Estrellas';
+import ConfirmModal from '@/components/ConfirmModal';
 import toast from 'react-hot-toast';
 import { useRouter } from 'next/router';
 
@@ -55,9 +57,6 @@ export default function EditarResena() {
 
   const eliminarResena = async () => {
     if (!resenaSeleccionada) return;
-    const confirmar = confirm('Estás seguro de eliminar esta reseña?');
-    if (!confirmar) return;
-
     const res = await fetch(`http://localhost:4000/api/resenas/${resenaSeleccionada.id}`, {
       method: 'DELETE',
       headers: {
@@ -92,7 +91,7 @@ export default function EditarResena() {
         </ul>
       ) : (
         <div className="space-y-4">
-          <Estrellas calificacion={calificacion} editable={true} setCalificacion={setCalificacion} />
+          <Estrellas calificacion={calificacion} editable={true} onChange={setCalificacion} />
           <textarea
             className="w-full border rounded p-2"
             value={comentario}
@@ -105,12 +104,11 @@ export default function EditarResena() {
             >
               Guardar cambios
             </button>
-            <button
-              onClick={eliminarResena}
-              className="px-4 py-2 bg-red-600 text-white rounded"
-            >
-              Eliminar reseña
-            </button>
+            <ConfirmModal
+              mensaje="¿Estás seguro de eliminar esta reseña? Esta acción no se puede deshacer."
+              onConfirmar={eliminarResena}
+              textoBoton="Eliminar reseña"
+            />
             <button
               onClick={() => setResenaSeleccionada(null)}
               className="px-4 py-2 bg-gray-300 rounded"
@@ -123,3 +121,4 @@ export default function EditarResena() {
     </div>
   );
 }
+

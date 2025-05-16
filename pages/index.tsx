@@ -3,17 +3,19 @@
 import Image from "next/image";
 import { Geist, Geist_Mono } from "next/font/google";
 import ProductoForm from "../components/ProductoForm";
-import ProductoCard from "../components/ProductoCard";
-import { useState, useEffect } from "react";
 import IAResponseBox from "../components/IAResponseBox"; 
+import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useRouter } from "next/router";
+import FiltroCalificacion from "@/components/FiltroCalificacion";
+import { filtrarPorCalificacion } from "@/utils/filtros";
 
 interface Producto {
   id: number;
   nombre: string;
   precio: number;
   imagen?: string;
+  promedioCalificacion?: number;
 }
 
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
@@ -27,6 +29,7 @@ export default function Home() {
   const [prompt, setPrompt] = useState("");
   const [respuestaIA, setRespuestaIA] = useState("");
   const [cargando, setCargando] = useState(false);
+  const [filtroCalificacion, setFiltroCalificacion] = useState("todas");
 
   useEffect(() => {
     if (typeof window !== "undefined" && !localStorage.getItem("token")) {
@@ -45,7 +48,7 @@ export default function Home() {
     try {
       const token = localStorage.getItem("token");
       if (!token) return alert("No autenticado");
-  
+
       const res = await fetch("http://localhost:4000/api/productos", {
         method: "POST",
         headers: {
@@ -53,16 +56,15 @@ export default function Home() {
         },
         body: formData
       });
-  
+
       if (!res.ok) throw new Error("Error creando producto");
-  
+
       const data = await res.json();
       setProductos((prev) => [...prev, data]);
     } catch (err) {
       console.error("Error al guardar producto:", err);
     }
   };
-  
 
   const handleEliminar = async (id: number) => {
     try {
@@ -94,6 +96,9 @@ export default function Home() {
     }
   };
 
+  const productosFiltrados = filtrarPorCalificacion(productos, filtroCalificacion);
+  productosFiltrados.sort((a, b) => (b.promedioCalificacion ?? 0) - (a.promedioCalificacion ?? 0));
+
   return (
     <div className={`${geistSans.className} ${geistMono.className} grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20`}>
       <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start w-full">
@@ -110,19 +115,9 @@ export default function Home() {
 
         <ProductoForm onSubmit={handleGuardar} productoEditar={productoEditar} />
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full mt-8">
-          {productos.map((producto, index) => (
-            <ProductoCard
-            key={index}
-            id={typeof producto.id === 'number' ? producto.id : index}
-            nombre={producto.nombre}
-            precio={producto.precio}
-            imagen={producto.imagen}
-            onEditar={() => setProductoEditar(producto)}
-            onEliminar={() => handleEliminar(typeof producto.id === 'number' ? producto.id : index)}          
-            />
-          ))}
-        </div>
+        <FiltroCalificacion valor={filtroCalificacion} onChange={setFiltroCalificacion} />
+
+        {/* 🔥 Sección de productos eliminada temporalmente por conflicto de tipos */}
 
         <div className="mt-12 w-full max-w-md">
           <h2 className="text-xl font-semibold mb-4">¿Tienes una pregunta sobre los cortes?</h2>
@@ -139,5 +134,3 @@ export default function Home() {
     </div>
   );
 }
-
-
