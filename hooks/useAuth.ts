@@ -24,10 +24,18 @@ export const useAuth = () => {
     const usuario = localStorage.getItem('usuario');
 
     if (token && usuario) {
-      setAuth({
-        token,
-        usuario: JSON.parse(usuario),
-      });
+      try {
+        const parsedUser = JSON.parse(usuario);
+        console.log("✅ Usuario recuperado de localStorage:", parsedUser);
+        setAuth({
+          token,
+          usuario: parsedUser,
+        });
+      } catch (e) {
+        console.error("❌ Error al parsear usuario desde localStorage:", e);
+      }
+    } else {
+      console.warn("⚠️ No hay token o usuario en localStorage.");
     }
   }, []);
 

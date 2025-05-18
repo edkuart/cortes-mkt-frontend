@@ -5,6 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import Estrellas from './Estrellas';
 import InsigniasVendedor from './InsigniasVendedor';
+import type { ProductoCardProps } from '@/types/producto';
 
 interface Resena {
   id: number;
@@ -13,18 +14,6 @@ interface Resena {
   Usuario?: {
     nombreCompleto: string;
   };
-}
-
-interface ProductoCardProps {
-  id: number;
-  nombre: string;
-  precio: number;
-  imagen?: string;
-  onEditar?: (id: number) => void;
-  onEliminar?: (id: number) => void;
-  destacado?: boolean;
-  filtroTipo?: string;
-  vendedorId?: number;
 }
 
 const filtrarResenas = (resenas: Resena[], filtroTipo: string): Resena[] => {

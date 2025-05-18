@@ -22,45 +22,64 @@ Este es el frontend del proyecto Marketplace Modular, desarrollado con **Next.js
 ```
 frontend/
 ├── components/
-│   ├── Estrellas.tsx ← ⭐ Calificación visual y emojis
-│   ├── IAResponseBox.tsx
-│   ├── Layout.tsx
-│   ├── PedidoCard.tsx
-│   ├── PedidoForm.tsx
-│   ├── ProductoCard.tsx
-│   ├── ProductoForm.tsx
-│   ├── ReseñasBox.tsx
-│   └── SolicitarDevolucion.tsx
+│   ├── Form/
+│   │   ├── InputArchivo.tsx          # 📤 Input especializado para archivos (vendedor)
+│   │   ├── InputText.tsx             # 🧾 Reutilizable para inputs de texto/email/password
+│   │   └── SelectRol.tsx             # 👤 Selector de rol (comprador/vendedor)
+│   ├── Estrellas.tsx                 # ⭐ Visualizador de calificación
+│   ├── IAResponseBox.tsx             # 🤖 Respuestas generadas por IA
+│   ├── Layout.tsx                    # 🧱 Layout general (si aplica)
+│   ├── PedidoCard.tsx                # 🧾 Vista individual de un pedido
+│   ├── PedidoForm.tsx                # 📥 Formulario de solicitud
+│   ├── ProductoCard.tsx              # 🛍 Vista individual de producto
+│   ├── ProductoForm.tsx              # 🧾 Formulario para crear producto
+│   ├── ReseñasBox.tsx                # ✍️ Caja para ver y dejar reseñas
+│   └── SolicitarDevolucion.tsx       # 📦 Solicitud de devolución
+│
 ├── hooks/
-│   ├── useAuth.ts
-│   ├── useIA.ts
-│   └── useResenasProducto.ts ← 🔁 Hook reutilizable de reseñas
+│   ├── useAuth.ts                    # 🔐 Autenticación con token localStorage
+│   ├── useIA.ts                      # ⚙️ Llamadas a la IA
+│   └── useResenasProducto.ts         # 🔁 Hook para reseñas públicas de producto
+│
 ├── pages/
-│   ├── api/
+│   ├── api/                          # (API interna si aplica)
 │   ├── _app.tsx
 │   ├── _document.tsx
 │   ├── carrito.tsx
 │   ├── crear-resena.tsx
 │   ├── dashboard-vendedor.tsx
-│   ├── editar-resena.tsx ← ✏️ Editar y eliminar reseñas
+│   ├── editar-resena.tsx
 │   ├── ia.tsx
 │   ├── index.tsx
 │   ├── login.tsx
 │   ├── mis-pedidos.tsx
 │   ├── mis-resenas.tsx
-│   └── resenas-producto/[id].tsx ← Página pública de reseñas de producto
+│   ├── registro.tsx                 # ✅ Página para crear cuenta (comprador y vendedor)
+│   └── resenas-producto/
+│       ├── [id].tsx                 # Página para reseñas de un producto específico
+│       ├── resumen.tsx
+│   └── vendedor/
+│       ├── responder-resenas.tsx
+│       ├── resumen-resenas.tsx
+│       ├── panel-vendedor.tsx
+│       └── Pedidos-Vendedor.tsx
+│
 ├── public/
+│   └── (imágenes, íconos, etc.)
+│
 ├── services/
-│   └── apiService.ts
+│   └── apiService.ts                # Abstracción para llamadas API
+│
 ├── styles/
 │   └── globals.css
+│
 ├── utils/
-│   └── estrellas.ts ← 🎯 Icono dinámico según puntuación
+│   └── estrellas.ts                 # 🎯 Iconos dinámicos según puntuación
+│
 ├── .env.local
 ├── tailwind.config.js
 ├── tsconfig.json
 └── next.config.js
-
 
 ```
 

@@ -1,4 +1,4 @@
-// 🧩 components/ReseñaBox.tsx
+// 🧩 components/ReseñasBox.tsx
 
 import { useEffect, useState } from 'react';
 
@@ -8,14 +8,18 @@ interface Reseña {
   calificacion: number;
   compradorId: number;
   createdAt: string;
+  respuestaVendedor?: string;
 }
 
 interface Props {
   productoId: number;
   compradorId: number;
+  vendedorId: number;
+  pedidoId: number;
+  token: string;
 }
 
-const ReseñasBox = ({ productoId, compradorId }: Props) => {
+const ReseñasBox = ({ productoId, compradorId, vendedorId, pedidoId, token }: Props) => {
   const [reseñas, setReseñas] = useState<Reseña[]>([]);
   const [comentario, setComentario] = useState('');
   const [calificacion, setCalificacion] = useState(5);
@@ -34,21 +38,28 @@ const ReseñasBox = ({ productoId, compradorId }: Props) => {
     try {
       const res = await fetch('http://localhost:4000/api/reseñas', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify({
-          vendedorId: productoId, // suponemos que el productoId coincide por ahora
-          compradorId,
+          vendedorId,
+          productoId,
+          pedidoId,
           comentario,
-          calificacion,
+          calificacion
         }),
       });
 
+      const json = await res.json();
+
       if (res.ok) {
-        const nueva = await res.json();
-        setReseñas((prev) => [...prev, nueva]);
+        setReseñas((prev) => [...prev, json.resena]);
         setYaOpino(true);
         setComentario('');
         setCalificacion(5);
+      } else {
+        console.error("❌ Error:", json.mensaje);
       }
     } catch (err) {
       console.error('Error al enviar reseña:', err);
@@ -66,6 +77,11 @@ const ReseñasBox = ({ productoId, compradorId }: Props) => {
             <li key={r.id} className="border p-2 rounded bg-gray-50">
               <p className="text-sm">⭐ {r.calificacion} - {r.comentario}</p>
               <p className="text-xs text-gray-500">{new Date(r.createdAt).toLocaleDateString()}</p>
+              {r.respuestaVendedor && (
+                <div className="mt-1 text-sm text-indigo-700 bg-indigo-50 border-l-4 border-indigo-400 pl-2">
+                  <strong>Respuesta:</strong> {r.respuestaVendedor}
+                </div>
+              )}
             </li>
           ))}
         </ul>

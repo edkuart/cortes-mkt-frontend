@@ -1,17 +1,26 @@
-
+// 📁 pages/login.tsx
 
 import { useState } from 'react';
 import { useRouter } from 'next/router';
+import Link from 'next/link';
+import { useAuth } from '@/hooks/useAuth';
+import toast from 'react-hot-toast';
+import { GoogleLogin } from '@react-oauth/google';
+import jwtDecode from 'jwt-decode';
 
 const LoginPage = () => {
   const router = useRouter();
+  const { login } = useAuth();
+
   const [correo, setCorreo] = useState('');
   const [contraseña, setContraseña] = useState('');
   const [error, setError] = useState('');
+  const [enviando, setEnviando] = useState(false);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setEnviando(true);
 
     try {
       const res = await fetch('http://localhost:4000/api/auth/login', {
@@ -26,15 +35,53 @@ const LoginPage = () => {
 
       if (!res.ok) {
         setError(data.mensaje || 'Error al iniciar sesión');
+        toast.error(data.mensaje || 'Error al iniciar sesión');
         return;
       }
 
-      localStorage.setItem('token', data.token);
-      router.push('/');
+      login(data.usuario, data.token);
+      toast.success('¡Sesión iniciada!');
+
+      if (data.usuario.rol === 'vendedor') {
+        router.push('/dashboard-vendedor');
+      } else {
+        router.push('/');
+      }
     } catch (err) {
       console.error('Login error:', err);
       setError('No se pudo conectar con el servidor');
+      toast.error('No se pudo conectar con el servidor');
+    } finally {
+      setEnviando(false);
     }
+  };
+
+  const handleGoogleSuccess = async (credentialResponse: any) => {
+    try {
+      const res = await fetch('http://localhost:4000/api/auth/google-login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ credential: credentialResponse.credential })
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        toast.error(data.mensaje || 'Error al iniciar sesión con Google');
+        return;
+      }
+
+      toast.success('¡Bienvenido!');
+      login(data.usuario, data.token);
+      router.push('/');
+    } catch (err) {
+      console.error('Error login Google:', err);
+      toast.error('Fallo al validar el token de Google');
+    }
+  };
+
+  const handleGoogleFailure = () => {
+    toast.error('Error al iniciar sesión con Google');
   };
 
   return (
@@ -69,9 +116,25 @@ const LoginPage = () => {
         <button
           type="submit"
           className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+          disabled={enviando}
         >
-          Entrar
+          {enviando ? 'Entrando...' : 'Entrar'}
         </button>
+
+        <p className="text-sm text-center mt-4">
+          ¿No tienes cuenta?{' '}
+          <Link href="/registro" className="text-blue-600 hover:underline">
+            Regístrate aquí
+          </Link>
+        </p>
+
+        <div className="mt-6">
+          <GoogleLogin
+            onSuccess={handleGoogleSuccess}
+            onError={handleGoogleFailure}
+            useOneTap
+          />
+        </div>
       </form>
     </div>
   );
