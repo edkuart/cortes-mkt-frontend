@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react';
 interface Usuario {
   id: number;
   nombre: string;
+  correo: string;
   rol: string;
 }
 
@@ -53,5 +54,11 @@ export const useAuth = () => {
 
   const isAuthenticated = () => !!auth.token;
 
-  return { ...auth, login, logout, isAuthenticated };
+  return {
+    user: auth.usuario,       // 🔁 Esto evita conflictos y errores en los componentes
+    token: auth.token,
+    login,
+    logout,
+    isAuthenticated
+  };  
 };

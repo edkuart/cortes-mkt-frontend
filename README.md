@@ -14,12 +14,10 @@ Este es el frontend del proyecto Marketplace Modular, desarrollado con **Next.js
 - Recharts (gráficas)
 - html2canvas + jsPDF (exportación PDF)
 - React Icons (estrellas animadas y emojis)
+- Google OAuth (`@react-oauth/google`)
 
 ---
 
-📁 Estructura del Proyecto
-
-```
 frontend/
 ├── components/
 │   ├── Form/
@@ -42,41 +40,43 @@ frontend/
 │   └── useResenasProducto.ts         # 🔁 Hook para reseñas públicas de producto
 │
 ├── pages/
-│   ├── api/                          # (API interna si aplica)
-│   ├── _app.tsx
+│   ├── api/
+│   │   └── hello.ts
+│   ├── comprador/
+│   │   ├── carrito.tsx
+│   │   ├── crear-resena.tsx
+│   │   ├── editar-resena.tsx
+│   │   ├── mis-pedidos.tsx
+│   │   └── mis-resenas.tsx
+│   ├── resenas-producto/
+│   │   ├── [id].tsx
+│   │   └── resumen.tsx
+│   ├── vendedor/
+│   │   ├── dashboard-vendedor.tsx
+│   │   ├── panel-vendedor.tsx
+│   │   ├── Pedidos-Vendedor.tsx
+│   │   ├── responder-resenas.tsx
+│   │   └── resumen-resenas.tsx
+│   ├── _app.tsx                      # 🌐 Configura GoogleOAuthProvider
 │   ├── _document.tsx
-│   ├── carrito.tsx
-│   ├── crear-resena.tsx
-│   ├── dashboard-vendedor.tsx
-│   ├── editar-resena.tsx
 │   ├── ia.tsx
 │   ├── index.tsx
-│   ├── login.tsx
-│   ├── mis-pedidos.tsx
-│   ├── mis-resenas.tsx
-│   ├── registro.tsx                 # ✅ Página para crear cuenta (comprador y vendedor)
-│   └── resenas-producto/
-│       ├── [id].tsx                 # Página para reseñas de un producto específico
-│       ├── resumen.tsx
-│   └── vendedor/
-│       ├── responder-resenas.tsx
-│       ├── resumen-resenas.tsx
-│       ├── panel-vendedor.tsx
-│       └── Pedidos-Vendedor.tsx
+│   ├── login.tsx                     # 🔐 Incluye login tradicional y con Google
+│   └── registro.tsx                  # ✅ Registro tradicional y con Google
 │
 ├── public/
 │   └── (imágenes, íconos, etc.)
 │
 ├── services/
-│   └── apiService.ts                # Abstracción para llamadas API
+│   └── apiService.ts
 │
 ├── styles/
 │   └── globals.css
 │
 ├── utils/
-│   └── estrellas.ts                 # 🎯 Iconos dinámicos según puntuación
+│   └── estrellas.ts
 │
-├── .env.local
+├── .env.local                        # ⚙️ Incluye NEXT_PUBLIC_GOOGLE_CLIENT_ID
 ├── tailwind.config.js
 ├── tsconfig.json
 └── next.config.js
@@ -102,7 +102,9 @@ npm run dev
 🔍 Páginas y Funcionalidades
 Cliente
 
-    /login → Inicio de sesión
+    /login → Inicio de sesión (correo/contraseña o Google)
+
+    /registro → Registro con validaciones y con Google
 
     /carrito → Ver carrito
 
@@ -142,6 +144,8 @@ Inteligencia Artificial
 
     utils/estrellas.ts: Función para renderizar estrella, estrella media o vacía
 
+    Login con Google: usando `@react-oauth/google`
+
 ---
 
 ## ✨ Funcionalidades Clave
@@ -174,3 +178,19 @@ Inteligencia Artificial
 Para dudas o sugerencias: [edkuart@gmail.com](mailto:edkuart@gmail.com)
 
 ✨ Proyecto en desarrollo continuo, con enfoque en experiencia de usuario, visualización clara y escalabilidad. Se planea integrar reputación de vendedor, insignias y filtros por reseña próximamente.
+
+Nuevas secciones / cambios:
+
+    + GoogleOAuthProvider (_app.tsx)
+
+    + Login con Google y registro con Google (login.tsx y registro.tsx)
+
+    + Vista de perfil (perfil.tsx) con actualización de nombre, correo, contraseña, imagen
+
+    + Soporte para fotoPerfil y fotoUrl del backend
+
+    + Vista previa de imagen antes de subir
+
+    + FormData y validaciones condicionales según el rol
+
+    + Nuevos inputs reutilizables: InputArchivo, InputText, SelectRol
