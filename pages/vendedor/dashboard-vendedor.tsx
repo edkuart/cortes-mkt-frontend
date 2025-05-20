@@ -1,4 +1,4 @@
-// 📊 Dashboard del Vendedor — Integración completa
+//frontend/pages/vendedor/ 📊 dashboard-vendedor.tsx
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import toast, { Toaster } from 'react-hot-toast';
@@ -39,7 +39,7 @@ interface RankingData {
 }
 
 export default function DashboardVendedor() {
-  const { usuario, isAuthenticated } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   const [pedidos, setPedidos] = useState<Pedido[]>([]);
   const [devoluciones, setDevoluciones] = useState<any[]>([]);
   const [resenas, setResenas] = useState<Resena[]>([]);
@@ -96,29 +96,29 @@ export default function DashboardVendedor() {
 
   
   useEffect(() => {
-    if (!isAuthenticated() || !usuario) return;
+    if (!isAuthenticated() || !user) return;
     setLoading(true);
-    fetch(`http://localhost:4000/api/pedidos?vendedorId=${usuario.id}`)
+    fetch(`http://localhost:4000/api/pedidos?vendedorId=${user.id}`)
       .then(res => res.json())
       .then(setPedidos)
       .catch(() => toast.error('Error al obtener pedidos'))
       .finally(() => setLoading(false));
 
-    fetch(`http://localhost:4000/api/devoluciones?vendedorId=${usuario.id}`)
+    fetch(`http://localhost:4000/api/devoluciones?vendedorId=${user.id}`)
       .then(res => res.json())
       .then(setDevoluciones)
       .catch(() => toast.error('Error al obtener devoluciones'));
 
-    fetch(`http://localhost:4000/api/reseñas/vendedor/${usuario.id}`)
+    fetch(`http://localhost:4000/api/reseñas/vendedor/${user.id}`)
       .then(res => res.json())
       .then(setResenas)
       .catch(() => toast.error('Error al obtener reseñas'));
 
-    fetch(`http://localhost:4000/api/vendedores/${usuario.id}/ranking`)
+    fetch(`http://localhost:4000/api/vendedores/${user.id}/ranking`)
       .then(res => res.json())
       .then(setRanking)
       .catch(() => toast.error('Error al obtener ranking'));
-  }, [usuario]);
+  }, [user]);
 
   const enviarCorreoPrueba = async () => {
     const res = await fetch('http://localhost:4000/api/notificaciones/correo', {

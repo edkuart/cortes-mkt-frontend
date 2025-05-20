@@ -29,17 +29,17 @@ interface Devolucion {
 }
 
 export default function MisPedidosPage() {
-  const { usuario, isAuthenticated } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   const [pedidos, setPedidos] = useState<Pedido[]>([]);
   const [motivos, setMotivos] = useState<Record<number, string>>({});
   const [devoluciones, setDevoluciones] = useState<Devolucion[]>([]);
 
   useEffect(() => {
     const fetchPedidos = async () => {
-      if (!isAuthenticated() || !usuario) return;
+      if (!isAuthenticated() || !user) return;
 
       try {
-        const res = await fetch(`http://localhost:4000/api/pedidos/usuario/${usuario.id}`);
+        const res = await fetch(`http://localhost:4000/api/pedidos/usuario/${user.id}`);
         const data = await res.json();
         setPedidos(data);
       } catch (error) {
@@ -49,7 +49,7 @@ export default function MisPedidosPage() {
 
     const fetchDevoluciones = async () => {
       try {
-        const res = await fetch(`http://localhost:4000/api/devoluciones/usuario/${usuario?.id}`);
+        const res = await fetch(`http://localhost:4000/api/devoluciones/usuario/${user?.id}`);
         const data = await res.json();
         setDevoluciones(data);
       } catch (error) {
@@ -59,7 +59,7 @@ export default function MisPedidosPage() {
 
     fetchPedidos();
     fetchDevoluciones();
-  }, [usuario]);
+  }, [user]);
 
   const confirmarEntrega = async (pedidoId: number) => {
     try {

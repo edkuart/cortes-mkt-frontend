@@ -37,7 +37,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 };
 
 const ResumenMensualResenas = () => {
-  const { usuario } = useAuth();
+  const { user} = useAuth();
   const [datos, setDatos] = useState<PuntoResumen[]>([]);
   const [anio, setAnio] = useState(dayjs().year().toString());
   const [mes, setMes] = useState('todos');
@@ -48,9 +48,9 @@ const ResumenMensualResenas = () => {
   const graficoRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!usuario?.id) return;
+    if (!user?.id) return;
     setCargando(true);
-    fetch(`http://localhost:4000/api/resenas/resumen/${usuario.id}`)
+    fetch(`http://localhost:4000/api/resenas/resumen/${user.id}`)
       .then(res => res.json())
       .then((data) => {
         const filtrado = data
@@ -73,7 +73,7 @@ const ResumenMensualResenas = () => {
       })
       .catch(() => toast.error('Error al cargar resumen de reseñas'))
       .finally(() => setCargando(false));
-  }, [anio, mes, minPromedio, tipo, minCantidad, usuario]);
+  }, [anio, mes, minPromedio, tipo, minCantidad, user]);
 
   const exportarComoPDF = async () => {
     if (!graficoRef.current) return;

@@ -14,12 +14,12 @@ interface Resena {
 }
 
 export default function MisResenas() {
-  const { usuario, token } = useAuth();
+  const { user, token } = useAuth();
   const [resenas, setResenas] = useState<Resena[]>([]);
 
   const cargarResenas = async () => {
     try {
-      const res = await fetch(`http://localhost:4000/api/resenas/comprador/${usuario?.id}`, {
+      const res = await fetch(`http://localhost:4000/api/resenas/comprador/${user?.id}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -73,8 +73,8 @@ export default function MisResenas() {
   };
 
   useEffect(() => {
-    if (usuario?.id) cargarResenas();
-  }, [usuario]);
+    if (user?.id) cargarResenas();
+  }, [user]);
 
   return (
     <div className="max-w-3xl mx-auto p-6">

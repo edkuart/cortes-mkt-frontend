@@ -7,7 +7,7 @@ import toast, { Toaster } from 'react-hot-toast';
 import Estrellas from '@/components/Estrellas';
 
 const CrearResena = () => {
-  const { usuario, token } = useAuth();
+  const { user, token } = useAuth();
   const [pedidoId, setPedidoId] = useState('');
   const [comentario, setComentario] = useState('');
   const [calificacion, setCalificacion] = useState(5);
@@ -16,9 +16,9 @@ const CrearResena = () => {
   const router = useRouter();
 
   useEffect(() => {
-    if (usuario && pedidoId) {
+    if (user&& pedidoId) {
       setVerificando(true);
-      fetch(`http://localhost:4000/api/resenas/verificar/${usuario.id}/${pedidoId}`)
+      fetch(`http://localhost:4000/api/resenas/verificar/${user.id}/${pedidoId}`)
         .then(res => res.json())
         .then(data => setPuedeResenar(!data.yaExiste))
         .catch(() => toast.error('Error al verificar reseña'))

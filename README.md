@@ -6,16 +6,16 @@ Este es el frontend del proyecto Marketplace Modular, desarrollado con **Next.js
 
 🚀 Tecnologías Utilizadas
 
-- Next.js
+- Next.js (App Routing)
 - React
 - TypeScript
-- Tailwind CSS
+- Tailwind CSS (UI moderna)
 - React Hot Toast (notificaciones)
-- Recharts (gráficas)
-- html2canvas + jsPDF (exportación PDF)
+- Recharts (gráficas de datos)
+- html2canvas + jsPDF (descarga PDF)
 - React Icons (estrellas animadas y emojis)
 - Google OAuth (`@react-oauth/google`)
-
+- Partículas animadas (Hero visual con FondoAnimado.tsx)
 ---
 
 frontend/
@@ -25,19 +25,25 @@ frontend/
 │   │   ├── InputText.tsx             # 🧾 Reutilizable para inputs de texto/email/password
 │   │   └── SelectRol.tsx             # 👤 Selector de rol (comprador/vendedor)
 │   ├── Estrellas.tsx                 # ⭐ Visualizador de calificación
+│   ├── FondoAnimado.tsx              # 🌄 Fondo animado con partículas
+│   ├── HeroPrincipal.tsx             # 🧵 Sección principal con mensaje hero
 │   ├── IAResponseBox.tsx             # 🤖 Respuestas generadas por IA
-│   ├── Layout.tsx                    # 🧱 Layout general (si aplica)
+│   ├── Layout.tsx                    # 🧱 Layout general con menú de usuario y título
 │   ├── PedidoCard.tsx                # 🧾 Vista individual de un pedido
 │   ├── PedidoForm.tsx                # 📥 Formulario de solicitud
 │   ├── ProductoCard.tsx              # 🛍 Vista individual de producto
 │   ├── ProductoForm.tsx              # 🧾 Formulario para crear producto
 │   ├── ReseñasBox.tsx                # ✍️ Caja para ver y dejar reseñas
-│   └── SolicitarDevolucion.tsx       # 📦 Solicitud de devolución
+│   ├── SolicitarDevolucion.tsx       # 📦 Solicitud de devolución
+│   ├── TarjetaGlass.tsx              # 🧊 Componente visual con estilo glassmorphism
+│   └── TituloPrincipal.tsx           # 🏷 Título reutilizable del sitio
 │
 ├── hooks/
 │   ├── useAuth.ts                    # 🔐 Autenticación con token localStorage
 │   ├── useIA.ts                      # ⚙️ Llamadas a la IA
-│   └── useResenasProducto.ts         # 🔁 Hook para reseñas públicas de producto
+│   ├── usePasswordStrength.ts        # 💪 Hook para fortaleza de contraseña
+│   ├── useResenasProducto.ts         # 🔁 Hook para reseñas públicas de producto
+│   └── useFormularioRegistro.ts      # 🧾 Manejo centralizado del formulario de registro
 │
 ├── pages/
 │   ├── api/
@@ -59,6 +65,9 @@ frontend/
 │   │   └── resumen-resenas.tsx
 │   ├── _app.tsx                      # 🌐 Configura GoogleOAuthProvider
 │   ├── _document.tsx
+│   ├── cambiar-password.tsx          # 🔑 Página para cambio de contraseña con sesión activa
+│   ├── recuperar-password.tsx        # 📨 Solicitud de recuperación de contraseña
+│   ├── reset-password.tsx            # 🔐 Establecer nueva contraseña vía token
 │   ├── ia.tsx
 │   ├── index.tsx
 │   ├── login.tsx                     # 🔐 Incluye login tradicional y con Google
@@ -74,7 +83,9 @@ frontend/
 │   └── globals.css
 │
 ├── utils/
-│   └── estrellas.ts
+│   ├── estrellas.ts                  # 🌟 Lógica de estrellas animadas
+│   ├── usuario.ts                    # 🧠 Función para construir URL de avatar
+│   └── validarRegistro.ts            # ✅ Validación modular y reutilizable para registro
 │
 ├── .env.local                        # ⚙️ Incluye NEXT_PUBLIC_GOOGLE_CLIENT_ID
 ├── tailwind.config.js
@@ -100,11 +111,13 @@ NEXT_PUBLIC_API_URL=http://localhost:4000
 npm run dev
 
 🔍 Páginas y Funcionalidades
-Cliente
+Autenticación
 
     /login → Inicio de sesión (correo/contraseña o Google)
 
     /registro → Registro con validaciones y con Google
+
+Comprador
 
     /carrito → Ver carrito
 
@@ -118,9 +131,11 @@ Cliente
 
 Vendedor
 
-    /dashboard-vendedor → Vista completa de ventas, calificaciones, evoluciones y devoluciones
+    /vendedor/dashboard-vendedor → Vista completa de ventas, calificaciones, evoluciones y devoluciones
 
-    Responder reseñas directamente desde el dashboard
+    /responder-resenas directamente desde el dashboard
+
+    /resumen-resenas
 
 Público
 
@@ -131,6 +146,14 @@ Público
 Inteligencia Artificial
 
     /ia → Chat con IA para sugerencias de productos
+
+Cuenta
+
+    /cambiar-password
+
+    /recuperar-password
+
+    /reset-password
 
 ✨ Componentes Destacados
 
@@ -150,12 +173,15 @@ Inteligencia Artificial
 
 ## ✨ Funcionalidades Clave
 
-- ⭐ **Componente interactivo de estrellas** (vibración, emojis, media estrella)
-- ✍️ **Edición/eliminación de reseñas** con validación de tiempo
-- 💬 **Respuesta del vendedor a reseñas**
-- 🚫 **Moderación de respuestas** (insultos bloqueados)
-- 📈 **Dashboard del vendedor** con comparativas y ranking
-- 📄 **Exportar gráficos y resumen PDF**
+- ⭐ Componente interactivo de estrellas** (vibración, emojis, media estrella)
+- ✍️ Edición/eliminación de reseñas** con validación de tiempo
+- 💬 Respuesta del vendedor a reseñas**
+- 🚫 Moderación de respuestas** (insultos bloqueados)
+- 📈 Dashboard del vendedor** con comparativas y ranking
+- 📄 Exportar gráficos y resumen PDF**
+- 🧾 Validación modular de formularios (`validarRegistro.ts`)
+- 💪 Evaluación visual de contraseña (`usePasswordStrength.ts`)
+
 
 ---
 

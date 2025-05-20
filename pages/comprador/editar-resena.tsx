@@ -15,7 +15,7 @@ interface Resena {
 }
 
 export default function EditarResena() {
-  const { usuario, isAuthenticated, token } = useAuth();
+  const { user, isAuthenticated, token } = useAuth();
   const [resenas, setResenas] = useState<Resena[]>([]);
   const [resenaSeleccionada, setResenaSeleccionada] = useState<Resena | null>(null);
   const [comentario, setComentario] = useState('');
@@ -23,12 +23,12 @@ export default function EditarResena() {
   const router = useRouter();
 
   useEffect(() => {
-    if (!isAuthenticated() || !usuario) return;
-    fetch(`http://localhost:4000/api/resenas/comprador/${usuario.id}`)
+    if (!isAuthenticated() || !user) return;
+    fetch(`http://localhost:4000/api/resenas/comprador/${user.id}`)
       .then(res => res.json())
       .then(setResenas)
       .catch(() => toast.error('Error al obtener reseñas'));
-  }, [usuario]);
+  }, [user]);
 
   const seleccionarResena = (r: Resena) => {
     setResenaSeleccionada(r);

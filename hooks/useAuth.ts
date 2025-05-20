@@ -7,6 +7,7 @@ interface Usuario {
   nombre: string;
   correo: string;
   rol: string;
+  fotoPerfil?: string;
 }
 
 interface AuthState {

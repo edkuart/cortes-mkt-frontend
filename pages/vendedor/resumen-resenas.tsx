@@ -12,21 +12,21 @@ interface ResumenMensual {
 }
 
 const ResumenMensualResenas = () => {
-  const { usuario } = useAuth();
+  const { user } = useAuth();
   const [datos, setDatos] = useState<ResumenMensual[]>([]);
   const [anioActual, setAnioActual] = useState<string>(new Date().getFullYear().toString());
   const [cargando, setCargando] = useState(true);
 
   useEffect(() => {
-    if (!usuario) return;
+    if (!user) return;
     setCargando(true);
 
-    fetch(`http://localhost:4000/api/resenas/vendedor/${usuario.id}/resumen-mensual`)
+    fetch(`http://localhost:4000/api/resenas/vendedor/${user.id}/resumen-mensual`)
       .then(res => res.json())
       .then(data => setDatos(data))
       .catch(() => setDatos([]))
       .finally(() => setCargando(false));
-  }, [usuario]);
+  }, [user]);
 
   const datosFiltrados = datos
     .filter(d => d.mes.startsWith(anioActual))

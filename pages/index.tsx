@@ -1,14 +1,16 @@
 // 📁 pages/index.tsx
 
 import Image from "next/image";
-import { Geist, Geist_Mono } from "next/font/google";
 import ProductoForm from "../components/ProductoForm";
 import IAResponseBox from "../components/IAResponseBox"; 
 import { useState, useEffect } from "react";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "../hooks/useAuth";
 import { useRouter } from "next/router";
-import FiltroCalificacion from "@/components/FiltroCalificacion";
-import { filtrarPorCalificacion } from "@/utils/filtros";
+import FiltroCalificacion from "../components/FiltroCalificacion";
+import { filtrarPorCalificacion } from "../utils/filtros";
+import UserDropdownMenu from "../components/UserDropdownMenu";
+import FondoAnimado from "../components/FondoAnimado";
+import TarjetaGlass from "../components/TarjetaGlass";
 
 interface Producto {
   id: number;
@@ -18,11 +20,8 @@ interface Producto {
   promedioCalificacion?: number;
 }
 
-const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
-const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
-
 export default function Home() {
-  const { usuario, logout, isAuthenticated } = useAuth();
+  const { user, logout, isAuthenticated } = useAuth();
   const router = useRouter();
   const [productos, setProductos] = useState<Producto[]>([]);
   const [productoEditar, setProductoEditar] = useState<Producto | null>(null);
@@ -100,37 +99,65 @@ export default function Home() {
   productosFiltrados.sort((a, b) => (b.promedioCalificacion ?? 0) - (a.promedioCalificacion ?? 0));
 
   return (
-    <div className={`${geistSans.className} ${geistMono.className} grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20`}>
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start w-full">
-        {isAuthenticated() && (
-          <div className="w-full max-w-xl flex justify-between items-center p-4 bg-gray-100 rounded-md">
-            <p className="text-gray-800">👋 Hola, {usuario?.nombre}</p>
-            <button onClick={logout} className="text-sm bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600">
-              Cerrar sesión
-            </button>
+    <FondoAnimado>
+      <div className="font-sans grid grid-rows-[auto_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
+        <header className="w-full flex justify-between items-center">
+          <div className="flex items-center gap-4">
+            {isAuthenticated() && (
+              <UserDropdownMenu
+                avatar={user?.fotoPerfil ? `http://localhost:4000/${user.fotoPerfil}` : undefined}
+                nombre={user?.nombre || "Usuario"}
+                logout={logout}
+              />
+            )}
           </div>
-        )}
+        </header>
 
-        <Image className="dark:invert" src="/next.svg" alt="Next.js logo" width={180} height={38} priority />
+        <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start w-full">
+          <Image src="/hero-cortes.jpg" alt="Cortes típicos guatemaltecos" width={1024} height={400} className="rounded-2xl shadow-lg object-cover w-full max-h-[400px]" />
 
-        <ProductoForm onSubmit={handleGuardar} productoEditar={productoEditar} />
+          <h1 className="text-4xl sm:text-5xl font-bold text-jade text-center mt-8">Conectando tradición con tecnología</h1>
+          <p className="text-lg text-madera text-center max-w-2xl">Explorá y vendé los cortes típicos más bellos de Guatemala, desde cualquier parte del país.</p>
 
-        <FiltroCalificacion valor={filtroCalificacion} onChange={setFiltroCalificacion} />
+          <TarjetaGlass className="w-full max-w-xl">
+            <ProductoForm onSubmit={handleGuardar} productoEditar={productoEditar} />
+          </TarjetaGlass>
 
-        {/* 🔥 Sección de productos eliminada temporalmente por conflicto de tipos */}
+          <div className="w-full max-w-xl">
+            <FiltroCalificacion valor={filtroCalificacion} onChange={setFiltroCalificacion} />
+          </div>
 
-        <div className="mt-12 w-full max-w-md">
-          <h2 className="text-xl font-semibold mb-4">¿Tienes una pregunta sobre los cortes?</h2>
-          <IAResponseBox
-            prompt={prompt}
-            setPrompt={setPrompt}
-            respuesta={respuestaIA}
-            cargando={cargando}
-            onSubmit={handleIA}
-          />
-        </div>
+          <TarjetaGlass className="mt-12 w-full max-w-md">
+            <h2 className="text-xl font-semibold mb-4">¿Tienes una pregunta sobre los cortes?</h2>
+            <IAResponseBox
+              prompt={prompt}
+              setPrompt={setPrompt}
+              respuesta={respuestaIA}
+              cargando={cargando}
+              onSubmit={handleIA}
+            />
+          </TarjetaGlass>
 
-      </main>
-    </div>
+          <TarjetaGlass className="mt-12 w-full max-w-4xl">
+            <h2 className="text-2xl font-bold text-center mb-6">🌟 Testimonios de clientes felices</h2>
+            <div className="grid gap-6 md:grid-cols-3">
+              <div className="bg-white/60 dark:bg-black/40 p-4 rounded-xl shadow">
+                <p className="text-madera dark:text-gray-100 italic">“Excelente calidad, me llegó rápido y en buen estado.”</p>
+                <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">– Ana M.</p>
+              </div>
+              <div className="bg-white/60 dark:bg-black/40 p-4 rounded-xl shadow">
+                <p className="text-madera dark:text-gray-100 italic">“Una experiencia increíble. Pude contactar con la vendedora fácilmente.”</p>
+                <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">– Luis R.</p>
+              </div>
+              <div className="bg-white/60 dark:bg-black/40 p-4 rounded-xl shadow">
+                <p className="text-madera dark:text-gray-100 italic">“La página es intuitiva y encontré justo lo que buscaba.”</p>
+                <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">– Marta Q.</p>
+              </div>
+            </div>
+          </TarjetaGlass>
+
+        </main>
+      </div>
+    </FondoAnimado>
   );
 }

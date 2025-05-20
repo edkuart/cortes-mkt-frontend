@@ -1,3 +1,5 @@
+// 📁 frontend/pages/vendedor/pedidos-vendedor.tsx
+
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import toast, { Toaster } from 'react-hot-toast';
@@ -22,7 +24,7 @@ interface Pedido {
 }
 
 export default function PedidosVendedorPage() {
-  const { usuario, isAuthenticated } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   const [pedidos, setPedidos] = useState<Pedido[]>([]);
   const [loading, setLoading] = useState(true);
   const [filtro, setFiltro] = useState<'todos' | 'enCamino' | 'pendientes'>('todos');
@@ -30,10 +32,10 @@ export default function PedidosVendedorPage() {
 
   useEffect(() => {
     const fetchPedidos = async () => {
-      if (!isAuthenticated() || !usuario) return;
+      if (!isAuthenticated() || !user) return;
       setLoading(true);
       try {
-        const res = await fetch(`http://localhost:4000/api/pedidos?vendedorId=${usuario.id}`);
+        const res = await fetch(`http://localhost:4000/api/pedidos?vendedorId=${user.id}`);
         const data = await res.json();
         setPedidos(data);
       } catch (error) {
@@ -45,7 +47,7 @@ export default function PedidosVendedorPage() {
     };
 
     fetchPedidos();
-  }, [usuario]);
+  }, [user]);
 
   const marcarComoDespachado = async (pedidoId: number) => {
     try {

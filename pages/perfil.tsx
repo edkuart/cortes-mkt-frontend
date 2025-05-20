@@ -20,6 +20,13 @@ const PerfilPage = () => {
     fotoPerfil: null as File | null,
   });
 
+  const [formOriginal, setFormOriginal] = useState({
+    nombreCompleto: '',
+    correo: '',
+    rol: '',
+    fotoPerfilUrl: '',
+  });
+
   const [preview, setPreview] = useState<string | null>(null);
   const [editando, setEditando] = useState(false);
   const [borrarFoto, setBorrarFoto] = useState(false);
@@ -34,17 +41,35 @@ const PerfilPage = () => {
         fotoPerfil: null,
       });
 
-      if ((user as any).fotoPerfilUrl) {
-        setPreview((user as any).fotoPerfilUrl);
-      } else if ((user as any).fotoPerfil) {
-        setPreview(`http://localhost:4000/${(user as any).fotoPerfil}`);
-      }
+      const fotoUrl = (user as any).fotoUrl || `http://localhost:4000/${(user as any).fotoPerfil || ''}`;
+
+      setFormOriginal({
+        nombreCompleto: user.nombre,
+        correo: user.correo,
+        rol: user.rol,
+        fotoPerfilUrl: fotoUrl,
+      });
+
+      setPreview(fotoUrl);
     }
   }, [user]);
 
   const handleChange = (campo: string, valor: any) => {
     if (campo === 'fotoPerfil') {
       if (valor instanceof File) {
+        const tipoPermitido = ['image/jpeg', 'image/png', 'image/jpg'];
+        const tamañoMaximo = 2 * 1024 * 1024; // 2MB
+
+        if (!tipoPermitido.includes(valor.type)) {
+          toast.error('Formato inválido. Solo se permiten JPG y PNG.');
+          return;
+        }
+
+        if (valor.size > tamañoMaximo) {
+          toast.error('La imagen es muy grande. Máximo 2MB.');
+          return;
+        }
+
         const url = URL.createObjectURL(valor);
         setPreview(url);
         setFormData(prev => ({ ...prev, fotoPerfil: valor }));
@@ -103,7 +128,25 @@ const PerfilPage = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
       <form onSubmit={handleActualizar} className="bg-white shadow-md rounded px-8 pt-6 pb-8 w-full max-w-md">
-        <h2 className="text-2xl font-bold mb-6 text-center">Mi Perfil</h2>
+        <h2 className="text-2xl font-bold mb-2 text-center">Mi Perfil</h2>
+        <p className="text-center text-gray-600 mb-4">
+          {formData.rol === 'vendedor' ? '🛍 Vendedor' : '🛒 Comprador'}
+          {(user as any)?.estado === 'aprobado' && (
+            <span className="ml-2 inline-block bg-green-200 text-green-800 text-xs px-2 py-1 rounded-full">Aprobado</span>
+          )}
+        </p>
+
+        {preview ? (
+          <div className="text-center">
+            <img
+              src={preview}
+              alt="Foto de perfil"
+              className="w-32 h-32 rounded-full object-cover mx-auto mb-4 border"
+            />
+          </div>
+        ) : (
+          <p className="text-sm text-center text-gray-500 mb-4">No has subido foto aún.</p>
+        )}
 
         <InputText
           label="Nombre completo"
@@ -135,23 +178,14 @@ const PerfilPage = () => {
             onChange={(e) => handleChange('fotoPerfil', e.target.files?.[0] || null)}
             className="w-full"
           />
-          {preview ? (
-            <div className="text-center">
-              <img
-                src={preview}
-                alt="Vista previa"
-                className="mt-2 h-24 w-24 object-cover rounded-full mx-auto border"
-              />
-              <button
-                type="button"
-                onClick={handleEliminarImagen}
-                className="mt-2 text-sm text-red-500 hover:underline"
-              >
-                Eliminar imagen de perfil
-              </button>
-            </div>
-          ) : (
-            <p className="text-center text-gray-500 text-sm">No se ha cargado una foto de perfil.</p>
+          {preview && (
+            <button
+              type="button"
+              onClick={handleEliminarImagen}
+              className="mt-2 text-sm text-red-500 hover:underline"
+            >
+              Eliminar imagen de perfil
+            </button>
           )}
         </div>
 
@@ -166,19 +200,31 @@ const PerfilPage = () => {
         </div>
 
         <button
-          type="submit"
-          className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-          disabled={!editando}
+          type="button"
+          onClick={() => router.push('/cambiar-password')}
+          className="mt-4 w-full bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-4 rounded"
         >
-          Guardar cambios
+          Cambiar contraseña
         </button>
 
         <button
           type="button"
-          onClick={() => setEditando(!editando)}
+          onClick={() => {
+            setEditando(false);
+            setFormData(prev => ({
+              ...prev,
+              nombreCompleto: formOriginal.nombreCompleto,
+              correo: formOriginal.correo,
+              rol: formOriginal.rol,
+              nuevaContraseña: '',
+              fotoPerfil: null,
+            }));
+            setPreview(formOriginal.fotoPerfilUrl);
+            setBorrarFoto(false);
+          }}
           className="mt-4 w-full bg-gray-300 hover:bg-gray-400 text-black font-bold py-2 px-4 rounded"
         >
-          {editando ? 'Cancelar' : 'Editar perfil'}
+          Cancelar
         </button>
       </form>
     </div>

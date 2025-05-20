@@ -1,4 +1,4 @@
-// 📁 pages/carrito.tsx
+// 📁 frontend/pages/comprador/carrito.tsx
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
@@ -11,7 +11,7 @@ interface ItemCarrito {
 }
 
 export default function CarritoPage() {
-  const { usuario, isAuthenticated } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   const router = useRouter();
   const [carrito, setCarrito] = useState<ItemCarrito[]>([]);
 
@@ -21,7 +21,7 @@ export default function CarritoPage() {
   }, []);
 
   const realizarPedido = async () => {
-    if (!isAuthenticated() || !usuario) {
+    if (!isAuthenticated() || !user) {
       alert('Debes iniciar sesión para hacer un pedido.');
       return;
     }
@@ -31,7 +31,7 @@ export default function CarritoPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          compradorId: usuario.id,
+          compradorId: user.id,
           productos: carrito.map((item) => ({ productoId: item.id, cantidad: 1 })),
         }),
       });

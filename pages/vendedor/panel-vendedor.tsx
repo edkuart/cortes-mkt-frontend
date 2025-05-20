@@ -1,4 +1,4 @@
-// 📁 pages/panel-vendedor.tsx
+// 📁 frontend/pages/vendedor/panel-vendedor.tsx
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
@@ -6,17 +6,17 @@ import { useRouter } from 'next/router';
 import Link from 'next/link';
 
 export default function PanelVendedor() {
-  const { usuario, token } = useAuth();
+  const { user, token } = useAuth();
   const router = useRouter();
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!token || usuario?.rol !== 'vendedor') {
+    if (!token || user?.rol !== 'vendedor') {
       router.push('/login');
     } else {
       setLoading(false);
     }
-  }, [token, usuario, router]);
+  }, [token, user, router]);
 
   if (loading) return <p className="text-center mt-10">Cargando...</p>;
 

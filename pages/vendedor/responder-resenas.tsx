@@ -16,16 +16,16 @@ interface Resena {
 }
 
 export default function ResponderResenas() {
-  const { usuario, isAuthenticated, token } = useAuth();
+  const { user, isAuthenticated, token } = useAuth();
   const [resenas, setResenas] = useState<Resena[]>([]);
 
   useEffect(() => {
-    if (!isAuthenticated() || !usuario) return;
-    fetch(`http://localhost:4000/api/resenas/vendedor/${usuario.id}`)
+    if (!isAuthenticated() || !user) return;
+    fetch(`http://localhost:4000/api/resenas/vendedor/${user.id}`)
       .then(res => res.json())
       .then(setResenas)
       .catch(() => toast.error('Error al obtener reseñas'));
-  }, [usuario]);
+  }, [user]);
 
   const responder = async (resenaId: number, respuesta: string) => {
     const res = await fetch(`http://localhost:4000/api/resenas/${resenaId}/respuesta`, {
