@@ -1,6 +1,7 @@
 // 📁 components/UserDropdownMenu.tsx
 
 import { useRouter } from 'next/router';
+import Link from 'next/link';
 
 interface Props {
   avatar?: string;
@@ -48,12 +49,13 @@ const UserDropdownMenu = ({ avatar, nombre = 'Usuario', logout }: Props) => {
             </button>
           </li>
           <li>
-            <button
-              onClick={() => router.push('/cambiar-password')}
-              className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
-            >
-              Cambiar Contraseña
-            </button>
+            <Link href="/cambiar-password">
+              <button
+                className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
+              >
+                Cambiar Contraseña
+              </button>
+            </Link>
           </li>
           {logout && (
             <li>

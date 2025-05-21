@@ -36,7 +36,8 @@ frontend/
 │   ├── ReseñasBox.tsx                # ✍️ Caja para ver y dejar reseñas
 │   ├── SolicitarDevolucion.tsx       # 📦 Solicitud de devolución
 │   ├── TarjetaGlass.tsx              # 🧊 Componente visual con estilo glassmorphism
-│   └── TituloPrincipal.tsx           # 🏷 Título reutilizable del sitio
+│   ├── TituloPrincipal.tsx           # 🏷 Título reutilizable del sitio
+│   └── UserDropdownMenu.tsx          # 👤 Menú desplegable del usuario (perfil, logout, etc.)
 │
 ├── hooks/
 │   ├── useAuth.ts                    # 🔐 Autenticación con token localStorage
@@ -48,49 +49,55 @@ frontend/
 ├── pages/
 │   ├── api/
 │   │   └── hello.ts
-│   ├── comprador/
-│   │   ├── carrito.tsx
-│   │   ├── crear-resena.tsx
-│   │   ├── editar-resena.tsx
-│   │   ├── mis-pedidos.tsx
-│   │   └── mis-resenas.tsx
-│   ├── resenas-producto/
-│   │   ├── [id].tsx
-│   │   └── resumen.tsx
-│   ├── vendedor/
-│   │   ├── dashboard-vendedor.tsx
-│   │   ├── panel-vendedor.tsx
-│   │   ├── Pedidos-Vendedor.tsx
-│   │   ├── responder-resenas.tsx
-│   │   └── resumen-resenas.tsx
-│   ├── _app.tsx                      # 🌐 Configura GoogleOAuthProvider
-│   ├── _document.tsx
 │   ├── cambiar-password.tsx          # 🔑 Página para cambio de contraseña con sesión activa
-│   ├── recuperar-password.tsx        # 📨 Solicitud de recuperación de contraseña
-│   ├── reset-password.tsx            # 🔐 Establecer nueva contraseña vía token
-│   ├── ia.tsx
-│   ├── index.tsx
+│   ├── ia.tsx                        # 🧠 Interfaz con el chatbot de IA
+│   ├── index.tsx                     # 🏠 Página principal
 │   ├── login.tsx                     # 🔐 Incluye login tradicional y con Google
-│   └── registro.tsx                  # ✅ Registro tradicional y con Google
+│   ├── perfil.tsx                    # 👤 Vista y edición del perfil del usuario
+│   ├── registro.tsx                  # ✅ Registro tradicional y con Google
+│   ├── reset-password.tsx            # 🔐 Establecer nueva contraseña vía token
+│   ├── recuperar-password.tsx        # 📨 Solicitud de recuperación de contraseña
+│   ├── mensajes/
+│   │   └── [id].tsx                  # 💬 Chat entre comprador y vendedor
+│   ├── productos/
+│   │   └── historial/
+│   │       └── [id].tsx              # 📜 Historial de cambios de un producto
+│   ├── resenas-producto/
+│   │   ├── [id].tsx                  # 📋 Detalle de reseñas por producto
+│   │   └── resumen.tsx              # 📊 Vista resumen de reseñas y rankings
+│   ├── comprador/
+│   │   ├── carrito.tsx               # 🛒 Carrito de compras
+│   │   ├── crear-resena.tsx         # ✍️ Crear nueva reseña
+│   │   ├── editar-resena.tsx        # 📝 Editar reseña existente
+│   │   ├── mis-pedidos.tsx          # 📦 Pedidos realizados por el comprador
+│   │   └── mis-resenas.tsx          # 🧾 Reseñas hechas por el comprador
+│   └── vendedor/
+│       ├── dashboard-vendedor.tsx   # 📈 Dashboard con gráficas y métricas
+│       ├── panel-vendedor.tsx       # 🧮 Panel general para gestión del vendedor
+│       ├── Pedidos-Vendedor.tsx     # 📋 Lista de pedidos del vendedor
+│       ├── responder-resenas.tsx    # ✍️ Respuesta a reseñas de productos
+│       ├── resumen-resenas.tsx      # 📊 Vista resumen de calificaciones por vendedor
+│       └── perfil-vendedor/
+│           └── [id].tsx             # 🧑‍💼 Perfil público del vendedor con productos y contacto
 │
 ├── public/
-│   └── (imágenes, íconos, etc.)
+│   └── (imágenes, íconos, etc.)      # 📁 Recursos estáticos
 │
 ├── services/
-│   └── apiService.ts
+│   └── apiService.ts                # 📡 Función centralizada para llamadas al backend
 │
 ├── styles/
-│   └── globals.css
+│   └── globals.css                  # 🎨 Estilos globales de Tailwind
 │
 ├── utils/
-│   ├── estrellas.ts                  # 🌟 Lógica de estrellas animadas
-│   ├── usuario.ts                    # 🧠 Función para construir URL de avatar
-│   └── validarRegistro.ts            # ✅ Validación modular y reutilizable para registro
+│   ├── estrellas.ts                 # 🌟 Lógica de estrellas animadas
+│   ├── usuario.ts                   # 🧠 Función para construir URL de avatar
+│   └── validarRegistro.ts           # ✅ Validación modular y reutilizable para registro
 │
-├── .env.local                        # ⚙️ Incluye NEXT_PUBLIC_GOOGLE_CLIENT_ID
-├── tailwind.config.js
-├── tsconfig.json
-└── next.config.js
+├── .env.local                       # ⚙️ Incluye NEXT_PUBLIC_GOOGLE_CLIENT_ID
+├── tailwind.config.js               # 🎨 Configuración de Tailwind
+├── tsconfig.json                    # ⚙️ Configuración TypeScript
+└── next.config.js                   # ⚙️ Configuración de Next.js
 
 ```
 
@@ -181,7 +188,15 @@ Cuenta
 - 📄 Exportar gráficos y resumen PDF**
 - 🧾 Validación modular de formularios (`validarRegistro.ts`)
 - 💪 Evaluación visual de contraseña (`usePasswordStrength.ts`)
-
+- 🧠 Autenticación con Google y correo/contraseña
+- 🔒 Validación de contraseña con barra visual
+- ⭐ Sistema de reseñas y respuestas
+- 📊 Gráficas dinámicas con Recharts
+- 📤 Subida de documentos para validación de vendedores
+- 🧾 Descarga de PDF desde gráficas
+- 🔍 Moderación de contenido ofensivo
+- 🧱 Diseño limpio, modular y responsive
+- 🌐 Preparado para internacionalización y expansión a React Native
 
 ---
 

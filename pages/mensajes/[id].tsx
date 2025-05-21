@@ -4,6 +4,8 @@ import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/router';
 import { useAuth } from '@/hooks/useAuth';
 import toast from 'react-hot-toast';
+import { useMensajesContext } from '@/context/MensajesContext';
+import { useVerificarMensajesNoLeidos } from '@/hooks/useVerificarMensajes';
 
 interface Mensaje {
   id: number;
@@ -21,6 +23,9 @@ export default function ChatConVendedor() {
   const [nuevoMensaje, setNuevoMensaje] = useState('');
   const mensajesEndRef = useRef<HTMLDivElement>(null);
 
+  const { setHayNoLeidos } = useMensajesContext();
+  const verificarMensajesNoLeidos = useVerificarMensajesNoLeidos(setHayNoLeidos);
+
   useEffect(() => {
     if (!user || !vendedorId) return;
 
@@ -30,9 +35,12 @@ export default function ChatConVendedor() {
       },
     })
       .then(res => res.json())
-      .then(setMensajes)
+      .then(data => {
+        setMensajes(data);
+        verificarMensajesNoLeidos();
+      })
       .catch(() => toast.error('Error al cargar mensajes'));
-  }, [vendedorId, user]);
+  }, [vendedorId, user, token, verificarMensajesNoLeidos]);
 
   const enviarMensaje = async (e: React.FormEvent) => {
     e.preventDefault();

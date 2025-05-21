@@ -58,7 +58,7 @@ const PerfilPage = () => {
     if (campo === 'fotoPerfil') {
       if (valor instanceof File) {
         const tipoPermitido = ['image/jpeg', 'image/png', 'image/jpg'];
-        const tamañoMaximo = 2 * 1024 * 1024; // 2MB
+        const tamañoMaximo = 2 * 1024 * 1024;
 
         if (!tipoPermitido.includes(valor.type)) {
           toast.error('Formato inválido. Solo se permiten JPG y PNG.');
@@ -163,14 +163,6 @@ const PerfilPage = () => {
           required
         />
 
-        <InputText
-          label="Nueva contraseña (opcional)"
-          value={formData.nuevaContraseña}
-          onChange={(v) => handleChange('nuevaContraseña', v)}
-          type="password"
-          required={false}
-        />
-
         <div className="mb-4">
           <label className="block text-gray-700 text-sm font-bold mb-2">Foto de perfil (opcional)</label>
           <input
@@ -200,11 +192,10 @@ const PerfilPage = () => {
         </div>
 
         <button
-          type="button"
-          onClick={() => router.push('/cambiar-password')}
-          className="mt-4 w-full bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-4 rounded"
+          type="submit"
+          className="mt-4 w-full bg-jade hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
         >
-          Cambiar contraseña
+          Guardar Cambios
         </button>
 
         <button
