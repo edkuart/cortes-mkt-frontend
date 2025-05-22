@@ -30,6 +30,8 @@ const PerfilPage = () => {
   const [preview, setPreview] = useState<string | null>(null);
   const [editando, setEditando] = useState(false);
   const [borrarFoto, setBorrarFoto] = useState(false);
+  const [exitoVisual, setExitoVisual] = useState(false);
+  const [guardando, setGuardando] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -86,23 +88,24 @@ const PerfilPage = () => {
 
   const handleActualizar = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (formData.nuevaContraseña && formData.nuevaContraseña.length < 6) {
+      toast.error('La contraseña debe tener al menos 6 caracteres.');
+      return;
+    }
+
     try {
+      setGuardando(true);
       const form = new FormData();
       form.append('nombreCompleto', formData.nombreCompleto);
       form.append('correo', formData.correo);
       if (formData.nuevaContraseña) form.append('nuevaContraseña', formData.nuevaContraseña);
-      if (formData.fotoPerfil) {
-        form.append('fotoPerfil', formData.fotoPerfil);
-      }
-      if (borrarFoto) {
-        form.append('borrarFoto', 'true');
-      }
+      if (formData.fotoPerfil) form.append('fotoPerfil', formData.fotoPerfil);
+      if (borrarFoto) form.append('borrarFoto', 'true');
 
       const res = await fetch(`http://localhost:4000/api/usuarios/${user?.id}`, {
         method: 'PATCH',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
         body: form,
       });
 
@@ -114,8 +117,12 @@ const PerfilPage = () => {
 
       toast.success('Perfil actualizado');
       setEditando(false);
+      setExitoVisual(true);
+      setTimeout(() => setExitoVisual(false), 3000);
     } catch (error) {
       toast.error('No se pudo actualizar el perfil');
+    } finally {
+      setGuardando(false);
     }
   };
 
@@ -135,6 +142,12 @@ const PerfilPage = () => {
             <span className="ml-2 inline-block bg-green-200 text-green-800 text-xs px-2 py-1 rounded-full">Aprobado</span>
           )}
         </p>
+
+        {exitoVisual && (
+          <div className="mb-4 flex items-center justify-center text-green-600 animate-fade-in">
+            <span className="text-xl mr-2">✅</span> Cambios guardados correctamente.
+          </div>
+        )}
 
         {preview ? (
           <div className="text-center">
@@ -163,8 +176,23 @@ const PerfilPage = () => {
           required
         />
 
-        <div className="mb-4">
-          <label className="block text-gray-700 text-sm font-bold mb-2">Foto de perfil (opcional)</label>
+        <InputText
+          label="Nueva contraseña (opcional)"
+          value={formData.nuevaContraseña}
+          onChange={(v) => handleChange('nuevaContraseña', v)}
+          type="password"
+        />
+
+        <div
+          onDragOver={(e) => e.preventDefault()}
+          onDrop={(e) => {
+            e.preventDefault();
+            const archivo = e.dataTransfer.files?.[0];
+            if (archivo) handleChange('fotoPerfil', archivo);
+          }}
+          className="mb-4 w-full border-2 border-dashed border-gray-300 p-4 rounded text-center cursor-pointer hover:bg-gray-100"
+        >
+          <p className="text-sm text-gray-500 mb-2">Arrastra tu imagen aquí o haz clic para subir</p>
           <input
             type="file"
             onChange={(e) => handleChange('fotoPerfil', e.target.files?.[0] || null)}
@@ -194,8 +222,9 @@ const PerfilPage = () => {
         <button
           type="submit"
           className="mt-4 w-full bg-jade hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
+          disabled={guardando}
         >
-          Guardar Cambios
+          {guardando ? 'Guardando...' : 'Guardar Cambios'}
         </button>
 
         <button

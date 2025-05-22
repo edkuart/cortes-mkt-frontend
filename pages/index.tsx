@@ -3,7 +3,7 @@
 import Image from "next/image";
 import ProductoForm from "../components/ProductoForm";
 import IAResponseBox from "../components/IAResponseBox"; 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useAuth } from "../hooks/useAuth";
 import { useRouter } from "next/router";
 import FiltroCalificacion from "../components/FiltroCalificacion";
@@ -11,6 +11,7 @@ import { filtrarPorCalificacion } from "../utils/filtros";
 import UserDropdownMenu from "../components/UserDropdownMenu";
 import FondoAnimado from "../components/FondoAnimado";
 import TarjetaGlass from "../components/TarjetaGlass";
+import Link from "next/link";
 
 interface Producto {
   id: number;
@@ -29,6 +30,7 @@ export default function Home() {
   const [respuestaIA, setRespuestaIA] = useState("");
   const [cargando, setCargando] = useState(false);
   const [filtroCalificacion, setFiltroCalificacion] = useState("todas");
+  const formRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (typeof window !== "undefined" && !localStorage.getItem("token")) {
@@ -66,6 +68,9 @@ export default function Home() {
   };
 
   const handleEliminar = async (id: number) => {
+    const confirmar = window.confirm("¿Estás seguro de que querés eliminar este producto?");
+    if (!confirmar) return;
+
     try {
       await fetch(`http://localhost:4000/api/productos/${id}`, {
         method: "DELETE",
@@ -74,6 +79,11 @@ export default function Home() {
     } catch (err) {
       console.error("Error al eliminar producto:", err);
     }
+  };
+
+  const handleEditar = (producto: Producto) => {
+    setProductoEditar(producto);
+    formRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
   const handleIA = async () => {
@@ -98,9 +108,11 @@ export default function Home() {
   const productosFiltrados = filtrarPorCalificacion(productos, filtroCalificacion);
   productosFiltrados.sort((a, b) => (b.promedioCalificacion ?? 0) - (a.promedioCalificacion ?? 0));
 
+  const productosDestacados = productos.filter(p => (p.promedioCalificacion ?? 0) >= 4.5);
+
   return (
     <FondoAnimado>
-      <div className="font-sans grid grid-rows-[auto_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
+      <div className="font-sans grid grid-rows-[auto_1fr_auto] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
         <header className="w-full flex justify-between items-center">
           <div className="flex items-center gap-4">
             {isAuthenticated() && (
@@ -119,7 +131,42 @@ export default function Home() {
           <h1 className="text-4xl sm:text-5xl font-bold text-jade text-center mt-8">Conectando tradición con tecnología</h1>
           <p className="text-lg text-madera text-center max-w-2xl">Explorá y vendé los cortes típicos más bellos de Guatemala, desde cualquier parte del país.</p>
 
-          <TarjetaGlass className="w-full max-w-xl">
+          {/* Productos destacados */}
+          {productosDestacados.length > 0 && (
+            <TarjetaGlass className="w-full max-w-5xl">
+              <h2 className="text-2xl font-bold text-center mb-6">🔥 Productos destacados</h2>
+              <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-3">
+                {productosDestacados.map(producto => (
+                  <div key={producto.id} className="bg-white/60 dark:bg-black/30 p-4 rounded-xl shadow flex flex-col gap-2">
+                    {producto.imagen ? (
+                      <Image
+                        src={`http://localhost:4000/${producto.imagen}`}
+                        alt={producto.nombre}
+                        width={400}
+                        height={300}
+                        className="rounded-lg object-cover w-full h-48"
+                      />
+                    ) : (
+                      <div className="bg-gray-200 dark:bg-gray-700 w-full h-48 rounded-lg flex items-center justify-center text-gray-500 text-sm italic">
+                        Sin imagen
+                      </div>
+                    )}
+                    <p className="text-lg font-semibold text-jade">{producto.nombre}</p>
+                    <p className="text-sm text-madera">Q{producto.precio.toFixed(2)}</p>
+                    {producto.promedioCalificacion && (
+                      <p className="text-sm text-yellow-600">⭐ {producto.promedioCalificacion.toFixed(1)}</p>
+                    )}
+                    <div className="flex gap-2 pt-2">
+                      <button onClick={() => handleEditar(producto)} className="text-sm text-blue-600 hover:underline">✏️ Editar</button>
+                      <button onClick={() => handleEliminar(producto.id)} className="text-sm text-red-600 hover:underline">🗑 Eliminar</button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </TarjetaGlass>
+          )}
+
+          <TarjetaGlass ref={formRef} className="w-full max-w-xl">
             <ProductoForm onSubmit={handleGuardar} productoEditar={productoEditar} />
           </TarjetaGlass>
 
@@ -155,8 +202,15 @@ export default function Home() {
               </div>
             </div>
           </TarjetaGlass>
-
         </main>
+
+        <footer className="w-full text-center text-sm text-gray-500 py-4 border-t border-white/20">
+          <p>
+            © {new Date().getFullYear()} Mercado de Cortes Típicos |{' '}
+            <Link href="/politicas" className="hover:underline text-jade">Políticas</Link>{' '}|
+            <Link href="/contacto" className="hover:underline text-jade"> Contacto</Link>
+          </p>
+        </footer>
       </div>
     </FondoAnimado>
   );

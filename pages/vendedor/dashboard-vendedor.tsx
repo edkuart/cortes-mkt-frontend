@@ -6,6 +6,14 @@ import dayjs from 'dayjs';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import { LineChart, Line } from 'recharts';
+import ResumenVentas from '@/components/DashboardVendedor/ResumenVentas';
+import ResumenRanking from '@/components/DashboardVendedor/ResumenRanking';
+import TopClientes from '@/components/DashboardVendedor/TopClientes';
+import TopProductos from '@/components/DashboardVendedor/TopProductos';
+import GraficoEvolucion from '@/components/DashboardVendedor/GraficoEvolucion';
+import TablaDevoluciones from '@/components/DashboardVendedor/TablaDevoluciones';
+import ResenasRecientes from '@/components/DashboardVendedor/ResenasRecientes';
+import dynamic from 'next/dynamic';
 import {
   BarChart, Bar,
   XAxis, YAxis, Tooltip,
@@ -39,7 +47,7 @@ interface RankingData {
 }
 
 export default function DashboardVendedor() {
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, token } = useAuth();
   const [pedidos, setPedidos] = useState<Pedido[]>([]);
   const [devoluciones, setDevoluciones] = useState<any[]>([]);
   const [resenas, setResenas] = useState<Resena[]>([]);
@@ -51,22 +59,30 @@ export default function DashboardVendedor() {
   const [filtroFechaInicio, setFiltroFechaInicio] = useState('');
   const [filtroFechaFin, setFiltroFechaFin] = useState('');
   const [filtroTipo, setFiltroTipo] = useState('todas');
-
+  const [filtro, setFiltro] = useState<'todas' | 'positivas' | 'negativas'>('todas');
 
   const aceptarDevolucion = async (id: number) => {
     try {
-      await fetch(`http://localhost:4000/api/devoluciones/${id}/aceptar`, { method: 'PATCH' });
-      setDevoluciones(devs => devs.filter(dev => dev.id !== id));
+      await fetch(`http://localhost:4000/api/devoluciones/${id}/aceptar`, {
+        method: 'PATCH',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
       toast.success('Devolución aceptada');
     } catch {
       toast.error('Error al aceptar devolución');
     }
   };
-  
+
   const rechazarDevolucion = async (id: number) => {
     try {
-      await fetch(`http://localhost:4000/api/devoluciones/${id}/rechazar`, { method: 'PATCH' });
-      setDevoluciones(devs => devs.filter(dev => dev.id !== id));
+      await fetch(`http://localhost:4000/api/devoluciones/${id}/rechazar`, {
+        method: 'PATCH',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
       toast.success('Devolución rechazada');
     } catch {
       toast.error('Error al rechazar devolución');
@@ -98,35 +114,54 @@ export default function DashboardVendedor() {
   useEffect(() => {
     if (!isAuthenticated() || !user) return;
     setLoading(true);
-    fetch(`http://localhost:4000/api/pedidos?vendedorId=${user.id}`)
+    fetch(`http://localhost:4000/api/pedidos?vendedorId=${user.id}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
       .then(res => res.json())
       .then(setPedidos)
       .catch(() => toast.error('Error al obtener pedidos'))
       .finally(() => setLoading(false));
 
-    fetch(`http://localhost:4000/api/devoluciones?vendedorId=${user.id}`)
+    fetch(`http://localhost:4000/api/devoluciones?vendedorId=${user.id}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
       .then(res => res.json())
       .then(setDevoluciones)
       .catch(() => toast.error('Error al obtener devoluciones'));
 
-    fetch(`http://localhost:4000/api/reseñas/vendedor/${user.id}`)
+    fetch(`http://localhost:4000/api/reseñas/vendedor/${user.id}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
       .then(res => res.json())
       .then(setResenas)
       .catch(() => toast.error('Error al obtener reseñas'));
 
-    fetch(`http://localhost:4000/api/vendedores/${user.id}/ranking`)
+    fetch(`http://localhost:4000/api/vendedores/${user.id}/ranking`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
       .then(res => res.json())
-      .then(setRanking)
+      .then(data => setRanking(data ?? null))
       .catch(() => toast.error('Error al obtener ranking'));
   }, [user]);
 
   const enviarCorreoPrueba = async () => {
     const res = await fetch('http://localhost:4000/api/notificaciones/correo', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
       body: JSON.stringify({
         asunto: '📨 Correo de prueba desde el dashboard del vendedor',
-        contenido: 'Este es un correo de prueba enviado desde tu panel.'
+        contenido: 'Este es un correo de prueba enviado desde tu panel.',
       }),
     });
   
@@ -163,6 +198,8 @@ export default function DashboardVendedor() {
     acc[nombre] = (acc[nombre] || 0) + d.cantidad;
     return acc;
   }, {} as Record<string, number>);
+
+  const totalProductosGlobal = productosVendidos.reduce((acc, d) => acc + d.cantidad, 0);
 
   const productosMasVendidos = Object.entries(rankingProductos)
     .sort((a, b) => b[1] - a[1])
@@ -277,104 +314,57 @@ export default function DashboardVendedor() {
         </button>
         </div>
 
-        <div id="grafico-evolucion" className="col-span-1 md:col-span-2 bg-white p-4 shadow rounded">
-            <h2 className="text-lg font-semibold mb-2">📆 Evolución mensual de ventas, pedidos y calificaciones</h2>
-            <ResponsiveContainer width="100%" height={300}>
-                <LineChart
-                data={Object.entries(ventasPorMes)
-                    .filter(([mes]) => mes.startsWith(fechaInicio.slice(0, 4)))
-                    .map(([mes]) => {
-                    const pedidosMes = pedidos.filter(p => {
-                        const esDelMes = dayjs(p.createdAt).format('YYYY-MM') === mes;
-                        if (categoriasSeleccionadas.length === 0) return esDelMes;
-                        return esDelMes && p.detalles.some(d => {
-                            const categoria = (d.producto as any).categoria;
-                            return categoriasSeleccionadas.includes(categoria);
-                          });
-                          
-                    });
-
-                    const totalMes = pedidosMes.reduce((acc, p) => acc + p.total, 0);
-
-                    const resenasMes = resenas.filter(r => dayjs(r.createdAt).format('YYYY-MM') === mes);
-                    const promedioCalif = resenasMes.length > 0
-                        ? resenasMes.reduce((sum, r) => sum + r.calificacion, 0) / resenasMes.length
-                        : null;
-
-                    return {
-                        mes,
-                        total: totalMes,
-                        pedidos: pedidosMes.length,
-                        calificacion: promedioCalif
-                    };
-                    })}
-                >
-                <XAxis dataKey="mes" />
-                <YAxis />
-                <Tooltip />
-                <Line type="monotone" dataKey="total" stroke="#8884d8" strokeWidth={2} name="Ventas (Q)" />
-                <Line type="monotone" dataKey="pedidos" stroke="#82ca9d" strokeWidth={2} name="Pedidos" />
-                <Line type="monotone" dataKey="calificacion" stroke="#ffc658" strokeWidth={2} name="Calificación Promedio" />
-                </LineChart>
-            </ResponsiveContainer>
-        </div>
-            
-        <div className="col-span-1 md:col-span-2 bg-white p-4 shadow rounded mt-6">
-        <h2 className="text-lg font-semibold mb-2">📦 Solicitudes de Devolución</h2>
-        <table className="w-full text-sm">
-            <thead>
-            <tr className="bg-gray-100">
-                <th className="text-left p-2">Producto</th>
-                <th className="text-left p-2">Motivo</th>
-                <th className="text-left p-2">Fecha</th>
-                <th className="text-center p-2">Acciones</th>
-            </tr>
-            </thead>
-            <tbody>
-                {devoluciones.map(dev => (
-                    <tr key={dev.id} className="border-t">
-                    <td className="p-2">{dev.producto?.nombre || 'Producto'}</td>
-                    <td className="p-2">{dev.motivo}</td>
-                    <td className="p-2">{dayjs(dev.createdAt).format('DD/MM/YYYY')}</td>
-
-                    <td className="p-2 text-center space-x-2">
-                    <button
-                      onClick={() => aceptarDevolucion(dev.id)}
-                      className="bg-green-500 text-white px-2 py-1 rounded text-xs hover:bg-green-600"
-                    >
-                      Aceptar
-                    </button>
-                    <button
-                      onClick={() => rechazarDevolucion(dev.id)}
-                      className="bg-red-500 text-white px-2 py-1 rounded text-xs hover:bg-red-600"
-                    >
-                      Rechazar
-                    </button>
-
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-
-            <button
-              onClick={async () => {
-                const res = await fetch('http://localhost:4000/api/notificaciones/correo', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({
-                    asunto: '📨 Correo de prueba desde el marketplace',
-                    contenido: 'Este es un correo de prueba enviado desde el frontend.'
-                  }),
+        <GraficoEvolucion datos={
+          Object.entries(ventasPorMes)
+            .map(([mes]) => {
+              const pedidosMes = pedidos.filter(p => {
+                const esDelMes = dayjs(p.createdAt).format('YYYY-MM') === mes;
+                if (categoriasSeleccionadas.length === 0) return esDelMes;
+                return esDelMes && p.detalles.some(d => {
+                  const categoria = (d.producto as any).categoria;
+                  return categoriasSeleccionadas.includes(categoria);
                 });
+              });
 
-                if (res.ok) {
-                  toast.success('Correo enviado correctamente');
-                } else {
-                  toast.error('Error al enviar el correo');
-                }
-              }}
+              const totalMes = pedidosMes.reduce((acc, p) => acc + p.total, 0);
+
+              const resenasMes = resenas.filter(r => dayjs(r.createdAt).format('YYYY-MM') === mes);
+              const promedioCalif = resenasMes.length > 0
+                ? resenasMes.reduce((sum, r) => sum + r.calificacion, 0) / resenasMes.length
+                : null;
+
+              return {
+                mes,
+                total: totalMes,
+                pedidos: pedidosMes.length,
+                calificacion: promedioCalif
+              };
+            })
+        } año={fechaInicio.slice(0, 4)} />
+            
+        <TablaDevoluciones
+          devoluciones={devoluciones}
+          onAceptar={aceptarDevolucion}
+          onRechazar={rechazarDevolucion}
+        />
+
+          <button
+            onClick={async () => {
+              const res = await fetch('http://localhost:4000/api/notificaciones/correo', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  asunto: '📨 Correo de prueba desde el marketplace',
+                  contenido: 'Este es un correo de prueba enviado desde el frontend.'
+                }),
+              });
+
+              if (res.ok) {
+              toast.success('Correo enviado correctamente');
+              } else {
+                toast.error('Error al enviar el correo');
+              }
+            }}
               className="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 mt-4"
             >
               📧 Enviar correo de prueba
@@ -402,27 +392,23 @@ export default function DashboardVendedor() {
 
       {loading ? <p>Cargando...</p> : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="bg-white shadow p-4 rounded">
-            <h2 className="text-lg font-semibold mb-1">Total ventas</h2>
-            <p className="text-2xl text-green-600">Q{totalVentas.toFixed(2)}</p>
-            <p className="text-sm text-gray-500">Promedio por cliente: Q{promedioPorCliente.toFixed(2)}</p>
-          </div>
-
-          <div className="bg-white shadow p-4 rounded">
-            <h2 className="text-lg font-semibold mb-1">Comparación mensual</h2>
-            <p className="text-gray-700">{mesActual}: Q{ventasActual.toFixed(2)}</p>
-            <p className="text-gray-700">{mesAnterior}: Q{ventasPasadas.toFixed(2)}</p>
-            <p className={`text-sm font-medium ${cambioPorcentaje >= 0 ? 'text-green-600' : 'text-red-500'}`}>Variación: {cambioPorcentaje.toFixed(1)}%</p>
-          </div>
+        <ResumenVentas
+          totalVentas={totalVentas}
+          promedioPorCliente={promedioPorCliente}
+          ventasActual={ventasActual}
+          ventasPasadas={ventasPasadas}
+          mesActual={mesActual}
+          mesAnterior={mesAnterior}
+          cambioPorcentaje={cambioPorcentaje}
+        />
 
           {ranking && (
-            <div className="bg-white shadow p-4 rounded">
-              <h2 className="text-lg font-semibold mb-1">📈 Ranking del vendedor</h2>
-              <p className="text-sm text-gray-700">Ventas totales: {ranking.ventas_totales}</p>
-              <p className="text-sm text-gray-700">Monto total: Q{ranking.monto_total.toFixed(2)}</p>
-              <p className="text-sm text-gray-700">Calificación promedio: {ranking.promedio_calificacion.toFixed(2)} ⭐</p>
-              {ranking.posicion && <p className="text-sm text-indigo-600">Posición en el ranking: #{ranking.posicion}</p>}
-            </div>
+            <ResumenRanking
+              ventasTotales={ranking.ventas_totales}
+              montoTotal={ranking.monto_total}
+              promedioCalificacion={ranking.promedio_calificacion}
+              posicion={ranking.posicion}
+            />
           )}
 
           <div className="bg-white shadow p-4 rounded">
@@ -431,29 +417,17 @@ export default function DashboardVendedor() {
             <p className="text-sm text-gray-500">Basado en {resenas.length} reseñas</p>
           </div>
 
-          <div className="col-span-1 md:col-span-2 bg-white p-4 shadow rounded">
-            <h2 className="text-lg font-semibold mb-2">Top 5 clientes</h2>
-            <ResponsiveContainer width="100%" height={250}>
-              <BarChart data={topClientes}>
-                <XAxis dataKey="nombre" />
-                <YAxis />
-                <Tooltip />
-                <Bar dataKey="total" fill="#00C49F" />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
 
-          <div className="col-span-1 md:col-span-2 bg-white p-4 shadow rounded">
-            <h2 className="text-lg font-semibold mb-2">Top productos más vendidos</h2>
-            <ResponsiveContainer width="100%" height={250}>
-              <BarChart data={productosMasVendidos}>
-                <XAxis dataKey="nombre" />
-                <YAxis />
-                <Tooltip />
-                <Bar dataKey="cantidad" fill="#FF8042" />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
+
+          <TopClientes
+            topClientes={topClientes}
+            totalVentasGlobal={totalVentas} // 💡 Esta es la prop nueva
+          />
+
+          <TopProductos
+            productosMasVendidos={productosMasVendidos}
+            totalProductosGlobal={totalProductosGlobal}
+          />
 
           {sinPedidosRecientes && (
             <div className="col-span-1 md:col-span-2 bg-yellow-100 p-4 border-l-4 border-yellow-500 text-yellow-800">
@@ -461,22 +435,8 @@ export default function DashboardVendedor() {
             </div>
           )}
 
-          
+          <ResenasRecientes resenas={resenas} filtro={filtro} setFiltro={setFiltro} />
 
-          {resenas.length > 0 && (
-            <div className="col-span-1 md:col-span-2 bg-white p-4 shadow rounded">
-              <h2 className="text-lg font-semibold mb-2">Últimas reseñas</h2>
-              <ul className="space-y-2">
-                
-                {resenas.slice(0, 5).map((r) => (
-                  <li key={r.id} className="border-b pb-2">
-                    <p className="text-sm text-gray-700">⭐ {r.calificacion} - "{r.comentario}"</p>
-                    <p className="text-xs text-gray-500">{r.Comprador?.nombreCompleto || 'Cliente'} - {dayjs(r.createdAt).format('DD/MM/YYYY')}</p>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
         </div>
       )}
     </div>

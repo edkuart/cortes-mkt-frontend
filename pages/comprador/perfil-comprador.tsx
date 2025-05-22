@@ -1,13 +1,15 @@
 // 📁 pages/comprador/perfil-comprador.tsx
+
 import { useEffect, useState, useRef } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useRouter } from 'next/router';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
 import dayjs from 'dayjs';
-import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
 import { obtenerPedidosComprador, obtenerResenasComprador } from '@/services/actividadService';
+import ResenaConRespuesta from '@/components/ResenaConRespuesta';
+import exportarPDFDesdeSeccion from '@/utils/pdfExport';
+import usePedidosResumen from '@/hooks/usePedidosResumen';
 
 interface Pedido {
   id: number;
@@ -28,6 +30,10 @@ interface Resena {
   comentario: string;
   calificacion: number;
   createdAt: string;
+  respuestaVendedor?: string;
+  Comprador?: {
+    nombreCompleto: string;
+  };
   Producto?: {
     id: number;
     nombre: string;
@@ -65,9 +71,7 @@ export default function PerfilCompradorPage() {
     localStorage.setItem('filtroResenas', filtro);
   }, [filtro]);
 
-  const totalGastado = pedidos.reduce((sum, p) => sum + p.total, 0);
-  const ultimoPedido = pedidos.length > 0 ? pedidos[pedidos.length - 1] : null;
-  const hayPedidoPendiente = pedidos.some(p => p.estado.toLowerCase() === 'pendiente');
+  const { totalGastado, ultimoPedido, hayPedidoPendiente } = usePedidosResumen(pedidos);
 
   const resenasFiltradas = resenas.filter(r => {
     if (filtro === 'positivas') return r.calificacion >= 4;
@@ -76,20 +80,14 @@ export default function PerfilCompradorPage() {
     return true;
   });
 
+  const actualizarRespuesta = (id: number, respuesta: string) => {
+    setResenas(prev => prev.map(r => r.id === id ? { ...r, respuestaVendedor: respuesta } : r));
+    toast.success('✅ Respuesta guardada correctamente');
+  };
+
   const exportarPDF = async () => {
-    if (!seccionRef.current || !user) return;
-    const canvas = await html2canvas(seccionRef.current);
-    const imgData = canvas.toDataURL('image/png');
-    const pdf = new jsPDF();
-    const imgProps = pdf.getImageProperties(imgData);
-    const pdfWidth = pdf.internal.pageSize.getWidth();
-    const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
-    const timestamp = dayjs().format('YYYY-MM-DD_HH-mm');
-    pdf.setFontSize(10);
-    pdf.text(`Usuario: ${user.nombre}`, 10, 10);
-    pdf.text(`Correo: ${user.correo}`, 10, 15);
-    pdf.addImage(imgData, 'PNG', 0, 20, pdfWidth, pdfHeight);
-    pdf.save(`actividad-comprador_${timestamp}.pdf`);
+    if (!user) return;
+    await exportarPDFDesdeSeccion(seccionRef.current, user, 'actividad-comprador');
   };
 
   return (
@@ -186,19 +184,10 @@ export default function PerfilCompradorPage() {
             {resenasFiltradas.length === 0 ? (
               <p className="text-gray-500">No hay reseñas para este filtro.</p>
             ) : (
-              <ul className="divide-y divide-gray-200">
+              <ul className="space-y-3">
                 {resenasFiltradas.map((r) => (
-                  <li key={r.id} className="py-2">
-                    <p className="font-medium text-yellow-700">⭐ {r.calificacion}</p>
-                    {r.Producto && (
-                      <p className="text-sm font-medium">
-                        Producto: <Link href={`/resenas-producto/${r.Producto.id}`} className="text-blue-600 hover:underline">
-                          {r.Producto.nombre}
-                        </Link>
-                      </p>
-                    )}
-                    <p className="text-sm italic">"{r.comentario}"</p>
-                    <p className="text-xs text-gray-400">{dayjs(r.createdAt).format('DD/MM/YYYY HH:mm')}</p>
+                  <li key={r.id}>
+                    <ResenaConRespuesta resena={r} onRespuestaGuardada={actualizarRespuesta} />
                   </li>
                 ))}
               </ul>
