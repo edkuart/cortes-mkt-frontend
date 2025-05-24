@@ -59,7 +59,6 @@ export default function PedidosVendedorPage() {
 
       if (!res.ok) throw new Error('Error al despachar el pedido');
 
-      const data = await res.json();
       toast.success('📦 Pedido marcado como despachado con éxito!', {
         duration: 4000,
         icon: '✅',
@@ -81,6 +80,16 @@ export default function PedidosVendedorPage() {
     }
   };
 
+  const pedidosFiltrados = pedidos.filter((pedido) => {
+    if (filtro === 'enCamino' && pedido.estadoTexto !== 'En camino') return false;
+    if (filtro === 'pendientes' && pedido.estadoTexto === 'Entregado') return false;
+    if (busquedaCliente.trim() && pedido.comprador) {
+      const nombre = pedido.comprador.nombreCompleto.toLowerCase();
+      if (!nombre.includes(busquedaCliente.toLowerCase())) return false;
+    }
+    return true;
+  });
+
   const exportarExcel = () => {
     const rows = pedidosFiltrados.map((p) => ({
       ID: p.id,
@@ -98,33 +107,22 @@ export default function PedidosVendedorPage() {
     XLSX.writeFile(wb, 'pedidos.xlsx');
   };
 
-  const pedidosFiltrados = pedidos.filter((pedido) => {
-    if (filtro === 'enCamino' && pedido.estadoTexto !== 'En camino') return false;
-    if (filtro === 'pendientes' && pedido.estadoTexto === 'Entregado') return false;
-    if (busquedaCliente.trim() && pedido.comprador) {
-      const nombre = pedido.comprador.nombreCompleto.toLowerCase();
-      if (!nombre.includes(busquedaCliente.toLowerCase())) return false;
-    }
-    return true;
-  });
-
   return (
     <div className="max-w-4xl mx-auto p-6">
       <Toaster position="top-right" reverseOrder={false} />
       <h1 className="text-2xl font-bold mb-4">📬 Pedidos Recibidos</h1>
 
       <div className="mb-4 flex flex-wrap gap-3 items-center">
-        <div className="flex gap-2">
-          <button onClick={() => setFiltro('todos')} className={`px-3 py-1 rounded ${filtro === 'todos' ? 'bg-blue-600 text-white' : 'bg-gray-200'}`}>
-            Todos
-          </button>
-          <button onClick={() => setFiltro('enCamino')} className={`px-3 py-1 rounded ${filtro === 'enCamino' ? 'bg-blue-600 text-white' : 'bg-gray-200'}`}>
-            En camino
-          </button>
-          <button onClick={() => setFiltro('pendientes')} className={`px-3 py-1 rounded ${filtro === 'pendientes' ? 'bg-blue-600 text-white' : 'bg-gray-200'}`}>
-            Pendientes
-          </button>
-        </div>
+        <select
+          value={filtro}
+          onChange={(e) => setFiltro(e.target.value as any)}
+          className="px-3 py-1 rounded border"
+        >
+          <option value="todos">Todos</option>
+          <option value="enCamino">En camino</option>
+          <option value="pendientes">Pendientes</option>
+        </select>
+
         <input
           type="text"
           value={busquedaCliente}

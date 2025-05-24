@@ -51,3 +51,6 @@ export default function ResenaConRespuesta({ resena, onRespuestaGuardada }: Prop
     </div>
   );
 }
+
+
+

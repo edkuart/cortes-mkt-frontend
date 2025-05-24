@@ -18,6 +18,7 @@ interface Vendedor {
   estado: string;
   fotoUrl?: string;
   productos?: any[];
+  promedioCalificacion?: number;
 }
 
 interface Resena {
@@ -82,10 +83,14 @@ const PerfilVendedor = () => {
 
   if (!vendedor) return null;
 
+  const promedio = vendedor.promedioCalificacion || (resenas.length
+    ? resenas.reduce((acc, r) => acc + r.calificacion, 0) / resenas.length
+    : 0);
+
   return (
     <FondoAnimado>
       <div className="min-h-screen flex items-center justify-center p-4">
-        <TarjetaGlass className="w-full max-w-3xl p-6">
+        <TarjetaGlass className={`w-full max-w-3xl p-6 ${promedio >= 4.5 ? 'ring-2 ring-green-200' : ''}`}>
           <div className="flex flex-col md:flex-row gap-6 items-center">
             <img
               src={vendedor.fotoUrl || '/placeholder.jpg'}
@@ -105,11 +110,33 @@ const PerfilVendedor = () => {
                   </span>
                 )}
               </p>
+              <p className="text-sm text-gray-700 mt-1">
+                ⭐ Promedio: {promedio.toFixed(2)} / 5
+              </p>
+              <p className="text-xs text-gray-500 mt-1">
+                {vendedor.productos?.length || 0} productos publicados · {resenas.length} reseñas recibidas
+              </p>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {promedio >= 4.5 && (
+                  <span className="inline-block bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded-full">
+                    🏅 Muy Valorado
+                  </span>
+                )}
+                {vendedor.productos && vendedor.productos.length >= 20 && (
+                  <span className="inline-block bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">
+                    🥇 Top en Ventas
+                  </span>
+                )}
+                {resenas.length >= 50 && (
+                  <span className="inline-block bg-purple-100 text-purple-800 text-xs px-2 py-1 rounded-full">
+                    💼 Vendedor Experto
+                  </span>
+                )}
+              </div>
               <p className="text-gray-500 text-sm mt-1">ID: {vendedor.id}</p>
             </div>
           </div>
 
-          {/* Zona de acciones */}
           {userAuth && userAuth.id !== vendedor.id && (
             <div className="mt-6 flex flex-col gap-4">
               <form onSubmit={enviarMensaje} className="space-y-4">
@@ -120,10 +147,12 @@ const PerfilVendedor = () => {
                   onChange={(e) => setContenido(e.target.value)}
                   placeholder="Escribe tu mensaje..."
                   rows={4}
+                  required
                 />
                 <button
                   type="submit"
                   className="bg-jade text-white px-4 py-2 rounded hover:bg-green-700 transition"
+                  disabled={!contenido.trim()}
                 >
                   Enviar mensaje
                 </button>
@@ -144,7 +173,6 @@ const PerfilVendedor = () => {
             </div>
           )}
 
-          {/* Productos */}
           <div className="mt-8">
             <h3 className="text-xl font-semibold mb-4 text-gray-800">Productos disponibles</h3>
             {vendedor.productos?.length ? (
@@ -158,7 +186,6 @@ const PerfilVendedor = () => {
             )}
           </div>
 
-          {/* Reseñas */}
           {resenas.length > 0 && (
             <div className="mt-10">
               <h3 className="text-xl font-semibold mb-4 text-gray-800">Reseñas del vendedor</h3>
@@ -170,6 +197,11 @@ const PerfilVendedor = () => {
                   </li>
                 ))}
               </ul>
+              {resenas.length > 5 && (
+                <Link href={`/resenas-producto/${vendedor.id}`} className="text-blue-600 hover:underline text-sm mt-2 inline-block">
+                  Ver todas las reseñas →
+                </Link>
+              )}
             </div>
           )}
         </TarjetaGlass>

@@ -1,4 +1,4 @@
-// 📁 pages/perfil.tsx
+// 📄 pages/perfil.tsx
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';

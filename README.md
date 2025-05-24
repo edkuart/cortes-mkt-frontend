@@ -16,6 +16,8 @@ Este es el frontend del proyecto Marketplace Modular, desarrollado con **Next.js
 - React Icons (estrellas animadas y emojis)
 - Google OAuth (`@react-oauth/google`)
 - Partículas animadas (Hero visual con FondoAnimado.tsx)
+- dayjs → Para formateo de fechas en el dashboard y reseñas.
+- classnames 
 ---
 
 frontend/
@@ -24,10 +26,12 @@ frontend/
 │   │   ├── InputArchivo.tsx          # 📤 Input especializado para archivos (vendedor)
 │   │   ├── InputText.tsx             # 🧾 Reutilizable para inputs de texto/email/password
 │   │   └── SelectRol.tsx             # 👤 Selector de rol (comprador/vendedor)
+│   ├── ConversacionCard.tsx          # 💬 Card para mostrar chats previos
 │   ├── Estrellas.tsx                 # ⭐ Visualizador de calificación
 │   ├── FondoAnimado.tsx              # 🌄 Fondo animado con partículas
 │   ├── HeroPrincipal.tsx             # 🧵 Sección principal con mensaje hero
 │   ├── IAResponseBox.tsx             # 🤖 Respuestas generadas por IA
+│   ├── InsigniasVendedor.tsx         # 🥇 Muestra insignias en productos y perfiles
 │   ├── Layout.tsx                    # 🧱 Layout general con menú de usuario y título
 │   ├── PedidoCard.tsx                # 🧾 Vista individual de un pedido
 │   ├── PedidoForm.tsx                # 📥 Formulario de solicitud
@@ -37,67 +41,80 @@ frontend/
 │   ├── SolicitarDevolucion.tsx       # 📦 Solicitud de devolución
 │   ├── TarjetaGlass.tsx              # 🧊 Componente visual con estilo glassmorphism
 │   ├── TituloPrincipal.tsx           # 🏷 Título reutilizable del sitio
-│   └── UserDropdownMenu.tsx          # 👤 Menú desplegable del usuario (perfil, logout, etc.)
+│   ├── UserDropdownMenu.tsx          # 👤 Menú desplegable del usuario
+│   └── DashboardVendedor/
+│       ├── GraficoEvolucion.tsx      # 📈 Gráfico combinado de métricas por mes
+│       ├── ResenasRecientes.tsx      # ✍️ Reseñas recientes filtrables
+│       ├── ResumenRanking.tsx        # 🏅 Posición y rendimiento del vendedor
+│       ├── ResumenVentas.tsx         # 💵 Resumen financiero de ventas
+│       ├── TablaDevoluciones.tsx     # 📦 Tabla con devoluciones pendientes
+│       ├── TopClientes.tsx           # 👥 Clientes con más compras
+│       └── TopProductos.tsx          # 🔥 Productos más vendidos (gráfico/tabla)
 │
 ├── hooks/
 │   ├── useAuth.ts                    # 🔐 Autenticación con token localStorage
 │   ├── useIA.ts                      # ⚙️ Llamadas a la IA
-│   ├── usePasswordStrength.ts        # 💪 Hook para fortaleza de contraseña
+│   ├── usePasswordStrength.ts        # 💪 Fortaleza de contraseña
 │   ├── useResenasProducto.ts         # 🔁 Hook para reseñas públicas de producto
-│   └── useFormularioRegistro.ts      # 🧾 Manejo centralizado del formulario de registro
+│   ├── useFormularioRegistro.ts      # 🧾 Formulario de registro centralizado
+│   └── usePedidosResumen.ts          # 📊 Procesamiento de pedidos para estadísticas
 │
 ├── pages/
 │   ├── api/
 │   │   └── hello.ts
-│   ├── cambiar-password.tsx          # 🔑 Página para cambio de contraseña con sesión activa
-│   ├── ia.tsx                        # 🧠 Interfaz con el chatbot de IA
-│   ├── index.tsx                     # 🏠 Página principal
-│   ├── login.tsx                     # 🔐 Incluye login tradicional y con Google
-│   ├── perfil.tsx                    # 👤 Vista y edición del perfil del usuario
-│   ├── registro.tsx                  # ✅ Registro tradicional y con Google
-│   ├── reset-password.tsx            # 🔐 Establecer nueva contraseña vía token
-│   ├── recuperar-password.tsx        # 📨 Solicitud de recuperación de contraseña
+│   ├── cambiar-password.tsx          # 🔑 Cambiar contraseña (usuario logueado)
+│   ├── ia.tsx                        # 🧠 Chat con IA integrada
+│   ├── index.tsx                     # 🏠 Landing page
+│   ├── login.tsx                     # 🔐 Login con correo o Google
+│   ├── perfil.tsx                    # 👤 Página de edición de perfil
+│   ├── registro.tsx                  # ✅ Registro con validaciones
+│   ├── reset-password.tsx            # 🔐 Reset con token por correo
+│   ├── recuperar-password.tsx        # 📨 Solicitud de recuperación
 │   ├── mensajes/
-│   │   └── [id].tsx                  # 💬 Chat entre comprador y vendedor
+│   │   └── [id].tsx                  # 💬 Vista de conversación
 │   ├── productos/
 │   │   └── historial/
 │   │       └── [id].tsx              # 📜 Historial de cambios de un producto
 │   ├── resenas-producto/
-│   │   ├── [id].tsx                  # 📋 Detalle de reseñas por producto
-│   │   └── resumen.tsx              # 📊 Vista resumen de reseñas y rankings
+│   │   ├── [id].tsx                  # 📋 Reseñas por producto
+│   │   └── resumen.tsx               # 📊 Estadísticas globales de reseñas
 │   ├── comprador/
 │   │   ├── carrito.tsx               # 🛒 Carrito de compras
-│   │   ├── crear-resena.tsx         # ✍️ Crear nueva reseña
-│   │   ├── editar-resena.tsx        # 📝 Editar reseña existente
-│   │   ├── mis-pedidos.tsx          # 📦 Pedidos realizados por el comprador
-│   │   └── mis-resenas.tsx          # 🧾 Reseñas hechas por el comprador
+│   │   ├── crear-resena.tsx          # ✍️ Nueva reseña de pedido
+│   │   ├── editar-resena.tsx         # 📝 Edición de reseña previa
+│   │   ├── mis-pedidos.tsx           # 📦 Historial del comprador
+│   │   ├── mis-resenas.tsx           # 📋 Lista de reseñas hechas
+│   │   └── perfil-comprador.tsx      # 📘 Perfil y resumen del comprador
 │   └── vendedor/
-│       ├── dashboard-vendedor.tsx   # 📈 Dashboard con gráficas y métricas
-│       ├── panel-vendedor.tsx       # 🧮 Panel general para gestión del vendedor
-│       ├── Pedidos-Vendedor.tsx     # 📋 Lista de pedidos del vendedor
-│       ├── responder-resenas.tsx    # ✍️ Respuesta a reseñas de productos
-│       ├── resumen-resenas.tsx      # 📊 Vista resumen de calificaciones por vendedor
+│       ├── dashboard-vendedor.tsx    # 📈 Dashboard con métricas
+│       ├── panel-vendedor.tsx        # 🧮 Vista general del vendedor
+│       ├── Pedidos-Vendedor.tsx      # 📋 Pedidos recibidos
+│       ├── responder-resenas.tsx     # ✍️ Gestionar respuestas a reseñas
+│       ├── resumen-resenas.tsx       # 📊 Estadísticas de calificaciones
 │       └── perfil-vendedor/
-│           └── [id].tsx             # 🧑‍💼 Perfil público del vendedor con productos y contacto
+│           └── [id].tsx              # 🧑‍💼 Perfil público del vendedor
 │
 ├── public/
 │   └── (imágenes, íconos, etc.)      # 📁 Recursos estáticos
 │
 ├── services/
-│   └── apiService.ts                # 📡 Función centralizada para llamadas al backend
+│   ├── actividadService.ts           # 📊 Actividad del comprador
+│   ├── apiService.ts                 # 📡 Llamadas centralizadas al backend
+│   └── moderacionService.ts          # 🚫 Filtro de contenido ofensivo
 │
 ├── styles/
-│   └── globals.css                  # 🎨 Estilos globales de Tailwind
+│   └── globals.css                   # 🎨 Estilos globales Tailwind
 │
 ├── utils/
-│   ├── estrellas.ts                 # 🌟 Lógica de estrellas animadas
-│   ├── usuario.ts                   # 🧠 Función para construir URL de avatar
-│   └── validarRegistro.ts           # ✅ Validación modular y reutilizable para registro
+│   ├── estrellas.ts                  # 🌟 Cálculo de estrellas animadas
+│   ├── usuario.ts                    # 🧠 Avatar y datos visuales del usuario
+│   ├── validarRegistro.ts            # ✅ Validaciones para el registro
+│   └── pdfExport.ts                  # 📄 Función para exportar divs a PDF
 │
-├── .env.local                       # ⚙️ Incluye NEXT_PUBLIC_GOOGLE_CLIENT_ID
-├── tailwind.config.js               # 🎨 Configuración de Tailwind
-├── tsconfig.json                    # ⚙️ Configuración TypeScript
-└── next.config.js                   # ⚙️ Configuración de Next.js
+├── .env.local                        # ⚙️ Variables de entorno (cliente)
+├── tailwind.config.js               # 🎨 Configuración Tailwind
+├── tsconfig.json                    # ⚙️ Configuración TS
+└── next.config.js                   # ⚙️ Configuración Next.js
 
 ```
 
@@ -135,6 +152,10 @@ Comprador
     /editar-resena → Editar o eliminar reseñas (si no han sido respondidas)
 
     /mis-resenas → Listado de reseñas propias
+
+    /perfil-comprador → Panel de actividad como comprador (pedidos, reseñas, total gastado)
+
+    /historial/[id] → Historial de cambios realizados sobre un producto
 
 Vendedor
 
@@ -176,9 +197,17 @@ Cuenta
 
     Login con Google: usando `@react-oauth/google`
 
+    InsigniasVendedor.tsx: Para mostrar insignias como "Top" o "Verificado"
+
+    ConversacionCard.tsx: Tarjeta que resume una conversación en mensajes
+
+    perfil-comprador.tsx: Página con total gastado, últimos pedidos, etc.
+
+    actividadService.ts: Nuevo servicio que centraliza lógica de dashboard comprador
+
 ---
 
-## ✨ Funcionalidades Clave
+ ✨ Funcionalidades Clave
 
 - ⭐ Componente interactivo de estrellas** (vibración, emojis, media estrella)
 - ✍️ Edición/eliminación de reseñas** con validación de tiempo
@@ -197,6 +226,12 @@ Cuenta
 - 🔍 Moderación de contenido ofensivo
 - 🧱 Diseño limpio, modular y responsive
 - 🌐 Preparado para internacionalización y expansión a React Native
+- 📄 Exportar actividad a PDF desde perfil del comprador
+- 🛍 Historial de cambios en producto visible por admins y vendedores
+- 📬 Resumen de conversaciones activas (últimos mensajes con otros usuarios)
+- 🧾 Filtros de reseñas con persistencia (almacenado en localStorage)
+- 🔐 Redirección automática en rutas protegidas con toast y setTimeout
+- 🧠 Centralización de llamadas a la API en carpeta services/
 
 ---
 
@@ -212,26 +247,30 @@ Cuenta
 
     Todo es modular para su futura integración en React Native
 
+    Las reseñas del comprador pueden filtrarse y exportarse como PDF
+
+    El sistema recuerda el filtro de reseñas seleccionado en el perfil
+
+    Se valida automáticamente que solo los compradores accedan a /perfil-comprador
+
+    Cada reseña puede ser vista con el producto asociado
+
 ---
 
 ## 📬 Contacto
 
-Para dudas o sugerencias: [edkuart@gmail.com](mailto:edkuart@gmail.com)
+    Para dudas o sugerencias: [edkuart@gmail.com](mailto:edkuart@gmail.com)
 
-✨ Proyecto en desarrollo continuo, con enfoque en experiencia de usuario, visualización clara y escalabilidad. Se planea integrar reputación de vendedor, insignias y filtros por reseña próximamente.
+    ✨ Proyecto en desarrollo continuo, con enfoque en experiencia de usuario, visualización clara y escalabilidad. Se planea integrar reputación de vendedor, insignias y filtros por reseña próximamente.
 
 Nuevas secciones / cambios:
 
-    + GoogleOAuthProvider (_app.tsx)
+    perfil-comprador.tsx con estadísticas y filtros
 
-    + Login con Google y registro con Google (login.tsx y registro.tsx)
+    historialController.js y vista /productos/historial/[id]
 
-    + Vista de perfil (perfil.tsx) con actualización de nombre, correo, contraseña, imagen
+    actividadService.ts para llamadas agrupadas
 
-    + Soporte para fotoPerfil y fotoUrl del backend
+    InsigniasVendedor.tsx para mostrar medallas como "Top Vendedor"
 
-    + Vista previa de imagen antes de subir
-
-    + FormData y validaciones condicionales según el rol
-
-    + Nuevos inputs reutilizables: InputArchivo, InputText, SelectRol
+    UserDropdownMenu.tsx actualizado con acceso a /cambiar-password

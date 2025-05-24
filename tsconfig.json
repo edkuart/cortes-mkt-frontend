@@ -17,8 +17,8 @@
     "noEmit": true,
     "incremental": true,
     "isolatedModules": true,
-    "types": []                     
+    "types": ["jest", "node"]                    
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx"],
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", "jest.setup.js"],
   "exclude": ["node_modules"]
 }

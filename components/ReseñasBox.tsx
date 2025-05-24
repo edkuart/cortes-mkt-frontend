@@ -1,120 +1,72 @@
-// 🧩 components/ReseñasBox.tsx
+// 🗨️ components/ResponderResenaBox.tsx
 
-import { useEffect, useState } from 'react';
-
-interface Reseña {
-  id: number;
-  comentario: string;
-  calificacion: number;
-  compradorId: number;
-  createdAt: string;
-  respuestaVendedor?: string;
-}
+import { useState } from 'react';
+import toast from 'react-hot-toast';
 
 interface Props {
-  productoId: number;
-  compradorId: number;
-  vendedorId: number;
-  pedidoId: number;
-  token: string;
+  resenaId: number;
+  onGuardado: (texto: string) => void;
 }
 
-const ReseñasBox = ({ productoId, compradorId, vendedorId, pedidoId, token }: Props) => {
-  const [reseñas, setReseñas] = useState<Reseña[]>([]);
-  const [comentario, setComentario] = useState('');
-  const [calificacion, setCalificacion] = useState(5);
-  const [yaOpino, setYaOpino] = useState(false);
+const LIMITE_CARACTERES = 280;
 
-  useEffect(() => {
-    fetch(`http://localhost:4000/api/reseñas/producto/${productoId}`)
-      .then((res) => res.json())
-      .then((data) => {
-        setReseñas(data);
-        setYaOpino(data.some((r: Reseña) => r.compradorId === compradorId));
-      });
-  }, [productoId, compradorId]);
+export default function ResponderResenaBox({ resenaId, onGuardado }: Props) {
+  const [respuesta, setRespuesta] = useState('');
+  const [cargando, setCargando] = useState(false);
 
-  const enviarReseña = async () => {
+  const caracteresUsados = respuesta.length;
+  const sePasoDelLimite = caracteresUsados > LIMITE_CARACTERES;
+
+  const guardarRespuesta = async () => {
+    if (!respuesta.trim()) {
+      return toast.error('La respuesta no puede estar vacía');
+    }
+
+    if (sePasoDelLimite) {
+      return toast.error(`Máximo permitido: ${LIMITE_CARACTERES} caracteres`);
+    }
+
+    setCargando(true);
     try {
-      const res = await fetch('http://localhost:4000/api/reseñas', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          vendedorId,
-          productoId,
-          pedidoId,
-          comentario,
-          calificacion
-        }),
+      const res = await fetch(`http://localhost:4000/api/resenas/${resenaId}/respuesta`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ respuestaVendedor: respuesta })
       });
 
-      const json = await res.json();
+      if (!res.ok) throw new Error('Error al guardar la respuesta');
 
-      if (res.ok) {
-        setReseñas((prev) => [...prev, json.resena]);
-        setYaOpino(true);
-        setComentario('');
-        setCalificacion(5);
-      } else {
-        console.error("❌ Error:", json.mensaje);
-      }
+      onGuardado(respuesta);
+      toast.success('Respuesta guardada');
+      setRespuesta('');
     } catch (err) {
-      console.error('Error al enviar reseña:', err);
+      toast.error('No se pudo guardar la respuesta');
+    } finally {
+      setCargando(false);
     }
   };
 
   return (
-    <div className="border rounded p-4 mt-4 bg-white shadow">
-      <h3 className="text-lg font-semibold mb-2">Reseñas</h3>
-      {reseñas.length === 0 ? (
-        <p className="text-sm text-gray-500">Aún no hay reseñas.</p>
-      ) : (
-        <ul className="space-y-2">
-          {reseñas.map((r) => (
-            <li key={r.id} className="border p-2 rounded bg-gray-50">
-              <p className="text-sm">⭐ {r.calificacion} - {r.comentario}</p>
-              <p className="text-xs text-gray-500">{new Date(r.createdAt).toLocaleDateString()}</p>
-              {r.respuestaVendedor && (
-                <div className="mt-1 text-sm text-indigo-700 bg-indigo-50 border-l-4 border-indigo-400 pl-2">
-                  <strong>Respuesta:</strong> {r.respuestaVendedor}
-                </div>
-              )}
-            </li>
-          ))}
-        </ul>
-      )}
-
-      {!yaOpino && (
-        <div className="mt-4">
-          <textarea
-            placeholder="Deja tu reseña..."
-            value={comentario}
-            onChange={(e) => setComentario(e.target.value)}
-            className="w-full border p-2 rounded mb-2"
-            rows={3}
-          />
-          <select
-            value={calificacion}
-            onChange={(e) => setCalificacion(Number(e.target.value))}
-            className="border rounded p-1 mb-2"
-          >
-            {[5, 4, 3, 2, 1].map((val) => (
-              <option key={val} value={val}>{val} estrellas</option>
-            ))}
-          </select>
-          <button
-            onClick={enviarReseña}
-            className="bg-blue-600 text-white px-4 py-2 rounded"
-          >
-            Enviar reseña
-          </button>
-        </div>
-      )}
+    <div className="mt-3">
+      <textarea
+        value={respuesta}
+        onChange={e => setRespuesta(e.target.value)}
+        className="w-full border rounded p-2 text-sm"
+        rows={3}
+        placeholder="Responder a esta reseña..."
+      />
+      <div className="flex justify-between items-center mt-1">
+        <span className={`text-xs ${sePasoDelLimite ? 'text-red-600' : 'text-gray-500'}`}>
+          {caracteresUsados}/{LIMITE_CARACTERES}
+        </span>
+        <button
+          onClick={guardarRespuesta}
+          disabled={cargando || !respuesta.trim() || sePasoDelLimite}
+          className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm disabled:opacity-50"
+        >
+          {cargando ? 'Guardando...' : 'Responder'}
+        </button>
+      </div>
     </div>
   );
-};
-
-export default ReseñasBox;
+}

@@ -1,7 +1,7 @@
 // 📁 components/DashboardVendedor/TopClientes.tsx
 
-import React, { useRef } from 'react';
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, LabelList } from 'recharts';
+import React, { useRef, useState } from 'react';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, LabelList, Cell } from 'recharts';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import toast from 'react-hot-toast';
@@ -18,6 +18,10 @@ interface Props {
 
 const TopClientes: React.FC<Props> = ({ topClientes, totalVentasGlobal }) => {
   const chartRef = useRef<HTMLDivElement>(null);
+  const [ordenAsc, setOrdenAsc] = useState(false);
+  const [topN, setTopN] = useState(5);
+  const [filtroNombre, setFiltroNombre] = useState('');
+  const [mostrarGrafico, setMostrarGrafico] = useState(true);
 
   const exportarPDF = () => {
     const input = chartRef.current;
@@ -36,10 +40,10 @@ const TopClientes: React.FC<Props> = ({ topClientes, totalVentasGlobal }) => {
   };
 
   const exportarCSV = () => {
-    if (topClientes.length === 0) return toast.error('No hay clientes para exportar');
+    if (clientesFiltrados.length === 0) return toast.error('No hay clientes para exportar');
 
     const encabezado = 'Cliente,Total\n';
-    const filas = topClientes.map((c) => `"${c.nombre}","${c.total.toFixed(2)}"`);
+    const filas = clientesFiltrados.map((c) => `"${c.nombre}","${c.total}"`);
     const csv = encabezado + filas.join('\n');
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
@@ -51,65 +55,97 @@ const TopClientes: React.FC<Props> = ({ topClientes, totalVentasGlobal }) => {
     document.body.removeChild(link);
   };
 
-  if (topClientes.length === 0) return null;
+  const clientesFiltrados = topClientes
+    .filter(c => c.nombre.toLowerCase().includes(filtroNombre.toLowerCase()))
+    .sort((a, b) => ordenAsc ? a.total - b.total : b.total - a.total)
+    .slice(0, topN);
 
-  const total = topClientes.reduce((acc, c) => acc + c.total, 0);
-  const porcentajeSobreGlobal = totalVentasGlobal ? ((total / totalVentasGlobal) * 100).toFixed(1) : null;
+  const total = clientesFiltrados.reduce((acc, c) => acc + c.total, 0);
+  const porcentajeGlobal = totalVentasGlobal ? ((total / totalVentasGlobal) * 100).toFixed(1) : null;
 
   const obtenerIcono = (index: number) => {
-    if (index === 0) return '🥇';
+    if (index === 0) return '👑';
     if (index === 1) return '🥈';
     if (index === 2) return '🥉';
-    return '👤';
+    return '🧍';
   };
+
+  const colores = ['#F59E0B', '#10B981', '#6366F1', '#EC4899', '#6B7280'];
 
   return (
     <div className="col-span-1 md:col-span-2 bg-white p-4 shadow rounded">
       <div className="flex justify-between items-center mb-2">
-        <h2 className="text-lg font-semibold">🎖 Top clientes</h2>
+        <h2 className="text-lg font-semibold">👥 Top clientes por monto de compra</h2>
         <div className="flex gap-2">
+          <button onClick={() => setMostrarGrafico(!mostrarGrafico)} className="px-3 py-1 bg-indigo-500 text-white rounded text-sm" title="Cambiar vista entre gráfico y tabla">{mostrarGrafico ? 'Tabla' : 'Gráfico'}</button>
           <button onClick={exportarPDF} className="px-3 py-1 bg-blue-600 text-white rounded text-sm" aria-label="Exportar gráfico como PDF">PDF</button>
           <button onClick={exportarCSV} className="px-3 py-1 bg-green-600 text-white rounded text-sm" aria-label="Exportar datos como CSV">CSV</button>
         </div>
       </div>
 
-      <p className="text-sm text-gray-600 mb-2">
-        💰 Total gastado entre los 5 mejores clientes: <span className="font-semibold text-gray-800">Q{total.toFixed(2)}</span>
-        {porcentajeSobreGlobal && (
-          <span className="text-xs text-gray-500 ml-2" title="Porcentaje del total de ventas globales">
-            ({porcentajeSobreGlobal}% del total global)
-          </span>
-        )}
-      </p>
-
-      <div ref={chartRef} id="grafico-clientes">
-        <ResponsiveContainer width="100%" height={250}>
-          <BarChart data={topClientes} margin={{ top: 10, right: 30, left: 0, bottom: 5 }}>
-            <XAxis
-              dataKey="nombre"
-              tick={{ fontSize: 12 }}
-              angle={-15}
-              textAnchor="end"
-              interval={0}
-              height={60}
-              aria-label="Nombre del cliente"
-            />
-            <YAxis tickFormatter={(value) => `Q${value}`} aria-label="Total gastado en quetzales" />
-            <Tooltip formatter={(value: number) => `Q${value.toFixed(2)} (${((value / total) * 100).toFixed(1)}%)`} />
-            <Bar dataKey="total" fill="#00C49F" radius={[4, 4, 0, 0]}>
-              <LabelList dataKey="total" position="top" formatter={(val: number) => `Q${val}`} />
-            </Bar>
-          </BarChart>
-        </ResponsiveContainer>
-        <ul className="mt-4 space-y-1 text-sm">
-          {topClientes.map((c, i) => (
-            <li key={i}>
-              <span className="mr-2">{obtenerIcono(i)}</span>
-              {c.nombre}: <span className="font-semibold text-gray-700">Q{c.total.toFixed(2)}</span>
-            </li>
-          ))}
-        </ul>
+      <div className="flex flex-wrap items-center gap-4 mb-2">
+        <label className="text-sm">🔍 Filtro por nombre:
+          <input type="text" value={filtroNombre} onChange={(e) => setFiltroNombre(e.target.value)} className="ml-2 border px-2 py-1 rounded text-sm" placeholder="Buscar..." />
+        </label>
+        <label className="text-sm">🎯 Top:
+          <select value={topN} onChange={(e) => setTopN(parseInt(e.target.value))} className="ml-2 border px-2 py-1 rounded text-sm">
+            {[3, 5, 10, 20].map(n => <option key={n} value={n}>Top {n}</option>)}
+          </select>
+        </label>
+        <button onClick={() => setOrdenAsc(!ordenAsc)} className="px-3 py-1 bg-gray-200 text-sm rounded" title="Cambiar orden de listado">Orden: {ordenAsc ? 'Asc 🔼' : 'Desc 🔽'}</button>
       </div>
+
+      {clientesFiltrados.length === 0 ? (
+        <p className="text-sm text-red-500 mt-2">⚠️ No se encontraron clientes con ese nombre.</p>
+      ) : (
+        <>
+          <p className="text-sm text-gray-600 mb-2">
+            💰 Total en top: <span className="font-semibold text-gray-800">Q{total.toFixed(2)}</span>
+            {porcentajeGlobal && (
+              <span className="text-xs text-gray-500 ml-2" title="Porcentaje respecto a todas las ventas">
+                ({porcentajeGlobal}% del total global)
+              </span>
+            )}
+          </p>
+
+          <div ref={chartRef} id="grafico-clientes">
+            {mostrarGrafico ? (
+              <ResponsiveContainer width="100%" height={250}>
+                <BarChart data={clientesFiltrados} margin={{ top: 10, right: 30, left: 0, bottom: 5 }}>
+                  <XAxis dataKey="nombre" tick={{ fontSize: 12 }} angle={-15} textAnchor="end" interval={0} height={60} aria-label="Nombre del cliente" />
+                  <YAxis aria-label="Monto comprado" />
+                  <Tooltip formatter={(value: number) => `Q${value.toFixed(2)} (${((value / total) * 100).toFixed(1)}%)`} />
+                  <Bar dataKey="total">
+                    <LabelList dataKey="total" position="top" formatter={(value: number) => `Q${value.toFixed(2)}`} />
+                    {clientesFiltrados.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={colores[index % colores.length]} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <table className="w-full text-sm mt-4 border" role="table" aria-label="Tabla de clientes principales">
+                <thead>
+                  <tr className="bg-gray-100">
+                    <th className="py-1 px-2 text-left">#</th>
+                    <th className="py-1 px-2 text-left">Cliente</th>
+                    <th className="py-1 px-2 text-left">Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {clientesFiltrados.map((c, i) => (
+                    <tr key={i} className="border-t">
+                      <td className="py-1 px-2">{obtenerIcono(i)}</td>
+                      <td className="py-1 px-2">{c.nombre}</td>
+                      <td className="py-1 px-2">Q{c.total.toFixed(2)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+        </>
+      )}
     </div>
   );
 };

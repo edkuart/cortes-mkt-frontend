@@ -1,4 +1,4 @@
-// 🧩 components/ProductoCard.tsx
+// 📁 components/ProductoCard.tsx
 
 import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
@@ -92,8 +92,14 @@ const ProductoCard: React.FC<ProductoCardProps> = ({
   filtroTipo = 'todas',
   vendedorId,
 }) => {
-  const { promedio, cantidad, ultimasFiltradas, refetch } = useResenasProducto(id, filtroTipo);
-  
+  const { promedio, cantidad, ultimasFiltradas } = useResenasProducto(id, filtroTipo);
+
+  const handleEliminar = () => {
+    if (confirm('¿Estás seguro de que deseas eliminar este producto?')) {
+      onEliminar?.(id);
+    }
+  };
+
   return (
     <div className={`border rounded shadow p-4 relative ${destacado ? 'bg-yellow-50 border-yellow-400' : 'bg-white'}`}>
       {imagen && (
@@ -135,30 +141,21 @@ const ProductoCard: React.FC<ProductoCardProps> = ({
         <p className="text-sm text-gray-400">Sin reseñas aún</p>
       )}
 
-      {(onEditar || onEliminar) && (
-        <div className="mt-3 flex justify-end gap-2">
-          {onEditar && (
-            <button
-              onClick={() => onEditar(id)}
-              className="px-3 py-1 text-sm bg-yellow-500 text-white rounded hover:bg-yellow-600"
-            >
-              Editar
-            </button>
-          )}
-          {onEliminar && (
-            <button
-              onClick={() => onEliminar(id)}
-              className="px-3 py-1 text-sm bg-red-500 text-white rounded hover:bg-red-600"
-            >
-              Eliminar
-            </button>
-          )}
-        </div>
-      )}
+      <div className="mt-3 flex justify-end gap-2">
+        <Link href={`/productos/editar/${id}`} className="px-3 py-1 text-sm bg-yellow-500 text-white rounded hover:bg-yellow-600">
+          Editar
+        </Link>
+        {onEliminar && (
+          <button
+            onClick={handleEliminar}
+            className="px-3 py-1 text-sm bg-red-500 text-white rounded hover:bg-red-600"
+          >
+            Eliminar
+          </button>
+        )}
+      </div>
     </div>
   );
 };
 
 export default ProductoCard;
-
-

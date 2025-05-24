@@ -18,13 +18,15 @@ interface Resena {
 export default function ResponderResenas() {
   const { user, isAuthenticated, token } = useAuth();
   const [resenas, setResenas] = useState<Resena[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!isAuthenticated() || !user) return;
     fetch(`http://localhost:4000/api/resenas/vendedor/${user.id}`)
       .then(res => res.json())
       .then(setResenas)
-      .catch(() => toast.error('Error al obtener reseñas'));
+      .catch(() => toast.error('Error al obtener reseñas'))
+      .finally(() => setLoading(false));
   }, [user]);
 
   const responder = async (resenaId: number, respuesta: string) => {
@@ -53,12 +55,14 @@ export default function ResponderResenas() {
     <div className="max-w-3xl mx-auto p-6">
       <h1 className="text-2xl font-bold mb-4">💬 Responder reseñas de compradores</h1>
 
-      {resenas.length === 0 ? (
+      {loading ? (
+        <p className="text-gray-500">Cargando reseñas...</p>
+      ) : resenas.length === 0 ? (
         <p className="text-gray-600">No hay reseñas disponibles.</p>
       ) : (
         <ul className="space-y-4">
           {resenas.map(resena => (
-            <li key={resena.id} className="border p-4 rounded">
+            <li key={resena.id} className="border p-4 rounded bg-white shadow">
               <p className="text-yellow-600 font-semibold">⭐ {resena.calificacion}</p>
               <p className="text-gray-700 italic mb-1">"{resena.comentario}"</p>
               <p className="text-sm text-gray-500">{resena.Comprador?.nombreCompleto || 'Cliente anónimo'}</p>

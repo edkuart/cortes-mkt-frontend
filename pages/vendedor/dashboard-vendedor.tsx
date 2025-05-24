@@ -1,4 +1,5 @@
 //frontend/pages/vendedor/ 📊 dashboard-vendedor.tsx
+
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import toast, { Toaster } from 'react-hot-toast';
@@ -13,6 +14,7 @@ import TopProductos from '@/components/DashboardVendedor/TopProductos';
 import GraficoEvolucion from '@/components/DashboardVendedor/GraficoEvolucion';
 import TablaDevoluciones from '@/components/DashboardVendedor/TablaDevoluciones';
 import ResenasRecientes from '@/components/DashboardVendedor/ResenasRecientes';
+import DashboardResumenVendedor from '@/components/DashboardVendedor/DashboardResumenVendedor';
 import dynamic from 'next/dynamic';
 import {
   BarChart, Bar,
@@ -392,15 +394,17 @@ export default function DashboardVendedor() {
 
       {loading ? <p>Cargando...</p> : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <ResumenVentas
-          totalVentas={totalVentas}
-          promedioPorCliente={promedioPorCliente}
-          ventasActual={ventasActual}
-          ventasPasadas={ventasPasadas}
-          mesActual={mesActual}
-          mesAnterior={mesAnterior}
-          cambioPorcentaje={cambioPorcentaje}
-        />
+          <DashboardResumenVendedor
+            totalVentas={totalVentas}
+            promedioPorCliente={promedioPorCliente}
+            ventasActual={ventasActual}
+            ventasPasadas={ventasPasadas}
+            mesActual={mesActual}
+            mesAnterior={mesAnterior}
+            cambioPorcentaje={cambioPorcentaje}
+            promedioResenas={promedioResenas}
+            cantidadResenas={resenas.length}
+          />
 
           {ranking && (
             <ResumenRanking
@@ -410,14 +414,6 @@ export default function DashboardVendedor() {
               posicion={ranking.posicion}
             />
           )}
-
-          <div className="bg-white shadow p-4 rounded">
-            <h2 className="text-lg font-semibold mb-1">⭐ Promedio de Calificación</h2>
-            <p className="text-2xl text-yellow-500">{promedioResenas.toFixed(1)} / 5 ⭐</p>
-            <p className="text-sm text-gray-500">Basado en {resenas.length} reseñas</p>
-          </div>
-
-
 
           <TopClientes
             topClientes={topClientes}
