@@ -6,6 +6,7 @@ import toast, { Toaster } from 'react-hot-toast';
 import dayjs from 'dayjs';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
+import { GoogleOAuthProvider } from '@react-oauth/google';
 import { LineChart, Line } from 'recharts';
 import ResumenVentas from '@/components/DashboardVendedor/ResumenVentas';
 import ResumenRanking from '@/components/DashboardVendedor/ResumenRanking';
@@ -62,6 +63,11 @@ export default function DashboardVendedor() {
   const [filtroFechaFin, setFiltroFechaFin] = useState('');
   const [filtroTipo, setFiltroTipo] = useState('todas');
   const [filtro, setFiltro] = useState<'todas' | 'positivas' | 'negativas'>('todas');
+  const [busqueda, setBusqueda] = useState('');
+  const [filtroCategoria, setFiltroCategoria] = useState('todos');
+  const [paginaActual, setPaginaActual] = useState(1);
+  const productosPorPagina = 6;
+
 
   const aceptarDevolucion = async (id: number) => {
     try {
@@ -135,7 +141,7 @@ export default function DashboardVendedor() {
       .then(setDevoluciones)
       .catch(() => toast.error('Error al obtener devoluciones'));
 
-    fetch(`http://localhost:4000/api/reseñas/vendedor/${user.id}`, {
+    fetch(`http://localhost:4000/api/resenas/vendedor/${user.id}`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -224,8 +230,27 @@ export default function DashboardVendedor() {
   const sinPedidosRecientes = !pedidos.some(p => dayjs(p.createdAt).isAfter(ahora.subtract(7, 'day')));
   const promedioResenas = resenas.length > 0 ? (resenas.reduce((acc, r) => acc + r.calificacion, 0) / resenas.length) : 0;
 
+  const productosFiltrados = pedidos
+  ?.filter(p =>
+    (filtroCategoria === 'todos' || p.categoria === filtroCategoria) &&
+    p.detalles?.some(d => d.producto?.nombre?.toLowerCase().includes(busqueda.toLowerCase()))
+  );
+
+const totalPaginas = Math.ceil((productosFiltrados?.length || 0) / productosPorPagina);
+const productosPaginados = productosFiltrados?.slice(
+  (paginaActual - 1) * productosPorPagina,
+  paginaActual * productosPorPagina
+);
+
+const cambiarPagina = (nuevaPagina: number) => {
+  if (nuevaPagina >= 1 && nuevaPagina <= totalPaginas) {
+    setPaginaActual(nuevaPagina);
+  }
+};
+
+
   return (
-    
+
     <div className="max-w-6xl mx-auto p-6" id="resumen-pdf">
       <Toaster />
       <h1 className="text-2xl font-bold mb-6">📊 Dashboard del Vendedor</h1>
@@ -315,6 +340,76 @@ export default function DashboardVendedor() {
             📸 Descargar gráfica mensual
         </button>
         </div>
+
+        <div className="flex flex-wrap gap-4 mb-4 justify-center md:justify-start">
+          <input
+            type="text"
+            placeholder="Buscar producto..."
+            value={busqueda}
+            onChange={(e) => {
+              setBusqueda(e.target.value);
+              setPaginaActual(1);
+            }}
+            className="border px-2 py-1 rounded w-full sm:w-64"
+          />
+
+          <label className="text-sm">
+            Categoría:
+            <select
+              className="ml-2 border rounded px-2 py-1"
+              value={filtroCategoria}
+              onChange={e => {
+                setFiltroCategoria(e.target.value);
+                setPaginaActual(1);
+              }}
+            >
+              <option value="todos">Todas</option>
+              <option value="corte">Corte</option>
+              <option value="traje_completo">Traje completo</option>
+              <option value="accesorio">Accesorio</option>
+              <option value="combo">Combo</option>
+            </select>
+          </label>
+        </div>
+
+        {productosPaginados?.length ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+            {productosPaginados.map(p => (
+              <div key={p.id} className="border p-4 rounded shadow bg-white">
+                <p className="font-semibold">{p.detalles[0]?.producto?.nombre || 'Sin nombre'}</p>
+                <p className="text-sm text-gray-600">Q{p.total.toFixed(2)} - {dayjs(p.createdAt).format('D [de] MMMM')}</p>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-center text-gray-500">No se encontraron productos.</p>
+        )}
+
+        <div className="flex justify-center gap-2 mt-6">
+          <button
+            className="px-3 py-1 rounded bg-gray-200 hover:bg-gray-300"
+            onClick={() => cambiarPagina(paginaActual - 1)}
+            disabled={paginaActual === 1}
+          >
+            ← Anterior
+          </button>
+          <span className="px-4 py-1 text-sm text-gray-600">
+            Página {paginaActual} de {totalPaginas}
+          </span>
+          <button
+            className="px-3 py-1 rounded bg-gray-200 hover:bg-gray-300"
+            onClick={() => cambiarPagina(paginaActual + 1)}
+            disabled={paginaActual === totalPaginas}
+          >
+            Siguiente →
+          </button>
+        </div>
+          
+        <GoogleOAuthProvider clientId="test-client-id">
+          <div>
+            {/* Todo el contenido de tu dashboard */}
+          </div>
+        </GoogleOAuthProvider>
 
         <GraficoEvolucion datos={
           Object.entries(ventasPorMes)

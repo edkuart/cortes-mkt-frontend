@@ -15,6 +15,14 @@ const RecuperarPassword = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    const correoValido = correo.trim();
+    if (!correoValido || !correoValido.includes('@') || !correoValido.includes('.')) {
+      toast.error('Ingresa un correo válido');
+      setError('Ingresa un correo válido');
+      return;
+    }
+
     setEnviando(true);
     setError('');
     setSuccess(false);
@@ -23,14 +31,14 @@ const RecuperarPassword = () => {
       const res = await fetch('http://localhost:4000/api/auth/recuperar-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ correo })
+        body: JSON.stringify({ correo: correoValido }),
       });
 
       const data = await res.json();
 
       if (!res.ok) throw new Error(data.mensaje || 'Error al enviar el correo');
 
-      toast.success('📧 Revisa tu correo para restablecer la contraseña');
+      toast.success('Correo enviado');
       setSuccess(true);
       setCorreo('');
     } catch (err: any) {
@@ -57,6 +65,7 @@ const RecuperarPassword = () => {
               onChange={setCorreo}
               type="email"
               required
+              error={error}
             />
 
             <button

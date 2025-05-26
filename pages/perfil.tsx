@@ -34,7 +34,7 @@ const PerfilPage = () => {
   const [guardando, setGuardando] = useState(false);
 
   useEffect(() => {
-    if (user) {
+    if (user && formData.nombreCompleto === '') {
       setFormData({
         nombreCompleto: user.nombre,
         correo: user.correo,
@@ -134,7 +134,8 @@ const PerfilPage = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-      <form onSubmit={handleActualizar} className="bg-white shadow-md rounded px-8 pt-6 pb-8 w-full max-w-md">
+      <form onSubmit={handleActualizar} data-testid="form-perfil"
+        className="bg-white shadow-md rounded px-8 pt-6 pb-8 w-full max-w-md">
         <h2 className="text-2xl font-bold mb-2 text-center">Mi Perfil</h2>
         <p className="text-center text-gray-600 mb-4">
           {formData.rol === 'vendedor' ? '🛍 Vendedor' : '🛒 Comprador'}
@@ -210,8 +211,9 @@ const PerfilPage = () => {
         </div>
 
         <div className="mb-4">
-          <label className="block text-gray-700 text-sm font-bold mb-2">Rol</label>
+          <label htmlFor="rol" className="block text-gray-700 text-sm font-bold mb-2">Rol</label>
           <input
+            id="rol"
             type="text"
             value={formData.rol}
             disabled

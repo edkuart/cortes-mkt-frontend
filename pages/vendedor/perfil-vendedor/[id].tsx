@@ -1,24 +1,43 @@
 // 📁 pages/vendedor/perfil-vendedor/[id].tsx
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/router';
 import TarjetaGlass from '@/components/TarjetaGlass';
 import FondoAnimado from '@/components/FondoAnimado';
 import ProductoCard from '@/components/ProductoCard';
+import Estrellas from '@/components/Estrellas';
+import InsigniasVendedor from '@/components/PerfilVendedor/InsigniasVendedor';
+import MensajeRapidoForm from '@/components/PerfilVendedor/MensajeRapidoForm';
+import ResumenCalificacion from '@/components/PerfilVendedor/ResumenCalificacion';
+import ResumenMetricas from '@/components/PerfilVendedor/ResumenMetricas';
+import BotonesVendedor from '@/components/PerfilVendedor/BotonesVendedor';
+import PaginadorProductos from '@/components/PerfilVendedor/PaginadorProductos';
+import ReseñasRecientes from '@/components/PerfilVendedor/ResenasRecientes';
 import { toast } from 'react-hot-toast';
-import dayjs from 'dayjs';
 import { FaUserTie, FaUserTag } from 'react-icons/fa';
 import { useAuth } from '@/hooks/useAuth';
-import Link from 'next/link';
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
+import dayjs from 'dayjs';
+dayjs.locale('es');
 
 interface Vendedor {
   id: number;
   nombreCompleto: string;
+  nombreComercial?: string;
   rol: string;
   estado: string;
   fotoUrl?: string;
   productos?: any[];
   promedioCalificacion?: number;
+  calificacionGlobal?: number;
+}
+
+interface Props {
+  resenas: Resena[];
+  paginaActual: number;
+  totalPaginas: number;
+  cambiarPagina: (nuevaPagina: number) => void;
 }
 
 interface Resena {
@@ -34,175 +53,244 @@ const PerfilVendedor = () => {
   const router = useRouter();
   const { id } = router.query;
   const { user: userAuth } = useAuth();
+
   const [vendedor, setVendedor] = useState<Vendedor | null>(null);
   const [resenas, setResenas] = useState<Resena[]>([]);
-  const [contenido, setContenido] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [filtroCategoria, setFiltroCategoria] = useState('todos');
+  const [orden, setOrden] = useState('');
+  const [busqueda, setBusqueda] = useState('');
+  const [paginaActual, setPaginaActual] = useState(1);
+  const [paginaResenas, setPaginaResenas] = useState(1);
+  const [verMasId, setVerMasId] = useState<number | null>(null);
+  const [exportando, setExportando] = useState(false);
+  const pdfRef = useRef<HTMLDivElement>(null);
+
+  const productosPorPagina = 6;
+  const resenasPorPagina = 5;
 
   useEffect(() => {
-    if (id) {
-      fetch(`http://localhost:4000/api/vendedores/${id}`)
-        .then(res => res.json())
-        .then(data => {
-          if (data.error) {
-            toast.error(data.error);
-          } else {
-            setVendedor(data);
-          }
-        })
-        .catch(() => toast.error('No se pudo cargar el perfil del vendedor'));
+    if (!id) return;
 
-      fetch(`http://localhost:4000/api/resenas/vendedor/${id}`)
-        .then(res => res.json())
-        .then(data => setResenas(data))
-        .catch(() => toast.error('No se pudieron cargar las reseñas'));
-    }
+    Promise.all([
+      fetch(`http://localhost:4000/api/vendedores/${id}`).then(res => res.json()),
+      fetch(`http://localhost:4000/api/resenas/vendedor/${id}`).then(res => res.json())
+    ])
+      .then(([vendedorData, resenasData]) => {
+        if (vendedorData.error) {
+          toast.error(vendedorData.error);
+        } else {
+          setVendedor(vendedorData);
+          setResenas(resenasData);
+        }
+      })
+      .catch(() => toast.error('Error al cargar datos del vendedor'))
+      .finally(() => setLoading(false));
   }, [id]);
 
-  const enviarMensaje = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!contenido.trim()) return;
-
+  const enviarMensaje = async (mensaje: string) => {
     const res = await fetch('http://localhost:4000/api/mensajes', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        contenido,
-        paraId: vendedor?.id,
-      }),
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ contenido: mensaje, paraId: vendedor?.id })
     });
 
     if (res.ok) {
       toast.success('Mensaje enviado');
-      setContenido('');
     } else {
       toast.error('Error al enviar mensaje');
     }
   };
 
-  if (!vendedor) return null;
+  const exportarPerfilPDF = async () => {
+    if (!pdfRef.current || exportando) return;
+    setExportando(true);
+    const canvas = await html2canvas(pdfRef.current);
+    const imgData = canvas.toDataURL('image/png');
+    const pdf = new jsPDF();
+    const pdfWidth = pdf.internal.pageSize.getWidth();
+    const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+    pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+    pdf.save(`perfil_vendedor_${id}.pdf`);
+    setExportando(false);
+  };
 
-  const promedio = vendedor.promedioCalificacion || (resenas.length
+  if (loading) return <p className="text-center mt-8 text-gray-500">Cargando perfil del vendedor...</p>;
+  if (!vendedor) return <p className="text-center mt-8 text-red-500">Vendedor no encontrado.</p>;
+
+  const promedio = vendedor.promedioCalificacion || vendedor.calificacionGlobal || (resenas.length
     ? resenas.reduce((acc, r) => acc + r.calificacion, 0) / resenas.length
     : 0);
+
+  const productosFiltrados = vendedor.productos
+    ?.filter(p => (filtroCategoria === 'todos' || p.categoria === filtroCategoria) && p.nombre.toLowerCase().includes(busqueda.toLowerCase()))
+    .sort((a, b) => {
+      if (orden === 'precio_asc') return a.precio - b.precio;
+      if (orden === 'precio_desc') return b.precio - a.precio;
+      if (orden === 'calificacion_desc') return (b.promedioCalificacion || 0) - (a.promedioCalificacion || 0);
+      return 0;
+    });
+
+  const totalPaginas = Math.ceil((productosFiltrados?.length || 0) / productosPorPagina);
+  const productosPaginados = productosFiltrados?.slice((paginaActual - 1) * productosPorPagina, paginaActual * productosPorPagina);
+
+  const cambiarPagina = (nuevaPagina: number) => {
+    if (nuevaPagina >= 1 && nuevaPagina <= totalPaginas) setPaginaActual(nuevaPagina);
+  };
+
+  const reseñasOrdenadas = resenas
+    .filter(r => r.comentario && r.comentario.length >= 3)
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+  const totalPaginasResenas = Math.ceil(reseñasOrdenadas.length / resenasPorPagina);
+  const resenasPaginadas = reseñasOrdenadas.slice((paginaResenas - 1) * resenasPorPagina, paginaResenas * resenasPorPagina);
+
+  const cambiarPaginaResenas = (nuevaPagina: number) => {
+    if (nuevaPagina >= 1 && nuevaPagina <= totalPaginasResenas) setPaginaResenas(nuevaPagina);
+  };
+
+  const porcentajePositivas = resenas.length > 0
+    ? (resenas.filter(r => r.calificacion >= 4).length / resenas.length) * 100
+    : 0;
+
+  const totalVentasSimulado = vendedor.productos?.reduce(
+    (sum, p) => sum + (p.stockOriginal || 0) * p.precio,
+    0
+  ) || 0;
+
+  const ventasPorMes: Record<string, number> = (vendedor.productos || []).reduce((acc, p) => {
+    const mes = dayjs(p.createdAt || new Date()).format('YYYY-MM');
+    const total = (p.stockOriginal || 0) * p.precio;
+    acc[mes] = (acc[mes] || 0) + total;
+    return acc;
+  }, {});
+
+  const mesActual = dayjs().format('YYYY-MM');
+  const mesAnterior = dayjs().subtract(1, 'month').format('YYYY-MM');
+  const gastoMesActual = ventasPorMes[mesActual] || 0;
+  const gastoMesAnterior = ventasPorMes[mesAnterior] || 0;
+  const variacionGasto = gastoMesAnterior
+    ? ((gastoMesActual - gastoMesAnterior) / gastoMesAnterior) * 100
+    : 0;
 
   return (
     <FondoAnimado>
       <div className="min-h-screen flex items-center justify-center p-4">
-        <TarjetaGlass className={`w-full max-w-3xl p-6 ${promedio >= 4.5 ? 'ring-2 ring-green-200' : ''}`}>
-          <div className="flex flex-col md:flex-row gap-6 items-center">
-            <img
-              src={vendedor.fotoUrl || '/placeholder.jpg'}
-              alt="Foto del vendedor"
-              className="w-32 h-32 rounded-full object-cover border"
-            />
-            <div className="text-center md:text-left">
-              <h2 className="text-2xl font-bold text-jade flex items-center gap-2">
-                {vendedor.nombreCompleto}
-                {vendedor.rol === 'vendedor' ? <FaUserTie className="text-xl text-gray-500" /> : <FaUserTag className="text-xl text-gray-500" />}
-              </h2>
-              <p className="text-gray-600">
-                {vendedor.rol === 'vendedor' ? '🛍 Vendedor' : '🛒 Comprador'}
-                {vendedor.estado === 'aprobado' && (
-                  <span className="ml-2 inline-block bg-green-200 text-green-800 text-xs px-2 py-1 rounded-full">
-                    Aprobado
-                  </span>
-                )}
-              </p>
-              <p className="text-sm text-gray-700 mt-1">
-                ⭐ Promedio: {promedio.toFixed(2)} / 5
-              </p>
-              <p className="text-xs text-gray-500 mt-1">
-                {vendedor.productos?.length || 0} productos publicados · {resenas.length} reseñas recibidas
-              </p>
-              <div className="mt-2 flex flex-wrap gap-2">
-                {promedio >= 4.5 && (
-                  <span className="inline-block bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded-full">
-                    🏅 Muy Valorado
-                  </span>
-                )}
-                {vendedor.productos && vendedor.productos.length >= 20 && (
-                  <span className="inline-block bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">
-                    🥇 Top en Ventas
-                  </span>
-                )}
-                {resenas.length >= 50 && (
-                  <span className="inline-block bg-purple-100 text-purple-800 text-xs px-2 py-1 rounded-full">
-                    💼 Vendedor Experto
-                  </span>
-                )}
-              </div>
-              <p className="text-gray-500 text-sm mt-1">ID: {vendedor.id}</p>
-            </div>
+        <TarjetaGlass className="w-full max-w-5xl p-6">
+          <div className="flex justify-between items-center mb-4">
+            <h1 className="text-2xl font-bold">🧑‍💼 Perfil de {vendedor.nombreComercial || vendedor.nombreCompleto}</h1>
+            <button
+              onClick={exportarPerfilPDF}
+              className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded disabled:opacity-50"
+              disabled={exportando}
+            >
+              📄 {exportando ? 'Generando...' : 'Exportar a PDF'}
+            </button>
           </div>
 
-          {userAuth && userAuth.id !== vendedor.id && (
-            <div className="mt-6 flex flex-col gap-4">
-              <form onSubmit={enviarMensaje} className="space-y-4">
-                <label className="block text-sm font-bold mb-1">Mensaje rápido</label>
-                <textarea
-                  className="w-full border rounded px-3 py-2"
-                  value={contenido}
-                  onChange={(e) => setContenido(e.target.value)}
-                  placeholder="Escribe tu mensaje..."
-                  rows={4}
-                  required
-                />
-                <button
-                  type="submit"
-                  className="bg-jade text-white px-4 py-2 rounded hover:bg-green-700 transition"
-                  disabled={!contenido.trim()}
-                >
-                  Enviar mensaje
-                </button>
-              </form>
-
-              <Link href={`/mensajes/${vendedor.id}`}>
-                <button
-                  type="button"
-                  className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition w-full"
-                >
-                  💬 Ir al chat con este vendedor
-                </button>
-              </Link>
-
-              <button className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded">
-                🚫 Reportar perfil
-              </button>
-            </div>
-          )}
-
-          <div className="mt-8">
-            <h3 className="text-xl font-semibold mb-4 text-gray-800">Productos disponibles</h3>
-            {vendedor.productos?.length ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                {vendedor.productos.map(producto => (
-                  <ProductoCard key={producto.id} {...producto} />
-                ))}
+          <div ref={pdfRef}>
+            <div className="flex flex-col md:flex-row gap-6 items-center">
+              <img
+                src={vendedor.fotoUrl || '/placeholder.jpg'}
+                alt="Foto del vendedor"
+                className="w-32 h-32 rounded-full object-cover border"
+              />
+              <div className="text-center md:text-left">
+                <h2 className="text-xl font-bold text-jade flex items-center gap-2">
+                  {vendedor.nombreCompleto}
+                  {vendedor.rol === 'vendedor' ? <FaUserTie className="text-xl text-gray-500" /> : <FaUserTag className="text-xl text-gray-500" />}
+                </h2>
+                <InsigniasVendedor promedio={promedio} cantidadProductos={vendedor.productos?.length || 0} cantidadResenas={resenas.length} />
+                <p className="text-gray-600">
+                  {vendedor.rol === 'vendedor' ? '🛍 Vendedor' : '🛒 Comprador'}
+                  {vendedor.estado === 'aprobado' && (
+                    <span className="ml-2 inline-block bg-green-200 text-green-800 text-xs px-2 py-1 rounded-full">Aprobado</span>
+                  )}
+                </p>
+                <p className="text-sm text-gray-700 mt-1">⭐ Promedio: {promedio.toFixed(2)} / 5</p>
+                <p className="text-xs text-gray-500 mt-1">
+                  {vendedor.productos?.length || 0} productos publicados · {resenas.length} reseñas recibidas
+                </p>
               </div>
-            ) : (
-              <p className="text-gray-500">Este vendedor aún no ha publicado productos.</p>
+            </div>
+
+            <ResumenCalificacion calificacion={promedio} />
+
+          <ResumenMetricas
+            metricas={[
+              { titulo: '📊 % de reseñas positivas', valor: `${porcentajePositivas.toFixed(1)}%`, color: 'text-green-700' },
+              { titulo: '💰 Ventas estimadas por stock', valor: `Q${totalVentasSimulado.toFixed(2)}`, color: 'text-blue-700' },
+              { titulo: `📅 Gasto en ${mesActual}`, valor: `Q${gastoMesActual.toFixed(2)}`, color: 'text-indigo-700' },
+              { titulo: `📅 Gasto en ${mesAnterior}`, valor: `Q${gastoMesAnterior.toFixed(2)}`, color: 'text-indigo-500' },
+              {
+                titulo: '📈 Variación mensual',
+                valor: `${variacionGasto.toFixed(2)}%`,
+                color: variacionGasto >= 0 ? 'text-green-700' : 'text-red-700',
+              },
+            ]}
+          />
+
+            <div className="mt-6">
+              <h3 className="text-xl font-semibold mb-4 text-gray-800">Productos en venta</h3>
+              <div className="flex flex-wrap gap-2 mb-4">
+                <input
+                  type="text"
+                  placeholder="Buscar producto..."
+                  className="border rounded px-3 py-1 text-sm"
+                  value={busqueda}
+                  onChange={e => setBusqueda(e.target.value)}
+                />
+                <select value={filtroCategoria} onChange={e => setFiltroCategoria(e.target.value)} className="border rounded px-3 py-1 text-sm">
+                  <option value="todos">Todas</option>
+                  <option value="corte">Corte</option>
+                  <option value="traje_completo">Traje completo</option>
+                  <option value="accesorio">Accesorio</option>
+                  <option value="combo">Combo</option>
+                </select>
+                <select value={orden} onChange={e => setOrden(e.target.value)} className="border rounded px-3 py-1 text-sm">
+                  <option value="">Predeterminado</option>
+                  <option value="precio_asc">Precio: menor a mayor</option>
+                  <option value="precio_desc">Precio: mayor a menor</option>
+                  <option value="calificacion_desc">Calificación más alta</option>
+                </select>
+              </div>
+              {productosPaginados?.length ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                  {productosPaginados.map(producto => (
+                    <ProductoCard key={producto.id} {...producto} />
+                  ))}
+                </div>
+              ) : (
+                <p className="text-gray-500">No se encontraron productos.</p>
+              )}
+
+              <PaginadorProductos
+                paginaActual={paginaActual}
+                totalPaginas={totalPaginas}
+                cambiarPagina={cambiarPagina}
+              />
+            </div>
+
+            {/* Reseñas recientes */}
+            <div className="mt-8">
+              <h3 className="text-xl font-semibold mb-4 text-gray-800">Reseñas recientes</h3>
+              <ReseñasRecientes
+                resenas={resenasPaginadas}
+                paginaActual={paginaResenas}
+                totalPaginas={totalPaginasResenas}
+                cambiarPagina={cambiarPaginaResenas}
+                verMasId={verMasId}
+                setVerMasId={setVerMasId}
+              />
+            </div>
+
+            {userAuth && userAuth.id !== vendedor.id && (
+              <MensajeRapidoForm onSubmit={enviarMensaje} />
             )}
           </div>
 
-          {resenas.length > 0 && (
-            <div className="mt-10">
-              <h3 className="text-xl font-semibold mb-4 text-gray-800">Reseñas del vendedor</h3>
-              <ul className="space-y-3">
-                {resenas.slice(0, 5).map((r) => (
-                  <li key={r.id} className="border-b pb-2">
-                    <p className="text-sm text-gray-700">⭐ {r.calificacion} - "{r.comentario}"</p>
-                    <p className="text-xs text-gray-500">{r.Comprador?.nombreCompleto || 'Cliente'} - {dayjs(r.createdAt).format('DD/MM/YYYY')}</p>
-                  </li>
-                ))}
-              </ul>
-              {resenas.length > 5 && (
-                <Link href={`/resenas-producto/${vendedor.id}`} className="text-blue-600 hover:underline text-sm mt-2 inline-block">
-                  Ver todas las reseñas →
-                </Link>
-              )}
-            </div>
+          {userAuth && userAuth.id !== vendedor.id && (
+            <BotonesVendedor vendedorId={vendedor.id} />
           )}
         </TarjetaGlass>
       </div>
