@@ -5,6 +5,7 @@ import dayjs from 'dayjs';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import toast from 'react-hot-toast';
+import Estrellas from '@/components/Estrellas'; 
 
 interface Reseña {
   id: number;
@@ -132,7 +133,13 @@ const ResenasRecientes: React.FC<Props> = ({ resenas, filtro, setFiltro }) => {
     return { clase: 'text-yellow-600', icono: '🟡' };
   };
 
-  if (ordenadas.length === 0) return null;
+  if (ordenadas.length === 0) {
+    return (
+      <div className="col-span-1 md:col-span-2 bg-white p-4 shadow rounded text-center text-gray-500">
+        💤 Aún no hay reseñas que mostrar.
+      </div>
+    );
+  }
 
   return (
     <div className="col-span-1 md:col-span-2 bg-white p-4 shadow rounded" role="region" aria-label="Últimas reseñas de clientes">
@@ -205,10 +212,20 @@ const ResenasRecientes: React.FC<Props> = ({ resenas, filtro, setFiltro }) => {
               ? `${r.comentario.slice(0, 200)}...`
               : r.comentario;
             return (
-              <li key={r.id} className="border-b pb-2">
+              <li
+                key={r.id}
+                className={`border-b pb-2 rounded px-2 ${
+                  r.calificacion >= 4
+                    ? 'bg-green-50'
+                    : r.calificacion <= 2
+                    ? 'bg-red-50'
+                    : 'bg-yellow-50'
+                }`}
+              >
                 <p className={`text-sm ${clase}`}>
                   {icono} {resaltado(comentarioMostrar, busqueda)}
                 </p>
+                <Estrellas calificacion={r.calificacion} />
                 {r.comentario.length > 200 && (
                   <button
                     onClick={() => toggleExpandida(r.id)}
@@ -260,7 +277,16 @@ const ResenasRecientes: React.FC<Props> = ({ resenas, filtro, setFiltro }) => {
               {ordenadas.map((r) => {
                 const { clase, icono } = getColorYIcono(r.calificacion);
                 return (
-                  <li key={r.id} className="border-b pb-2">
+                  <li
+                    key={r.id}
+                    className={`border-b pb-2 rounded px-2 ${
+                      r.calificacion >= 4
+                        ? 'bg-green-50'
+                        : r.calificacion <= 2
+                        ? 'bg-red-50'
+                        : 'bg-yellow-50'
+                    }`}
+                  >
                     <p className={`text-sm font-medium ${clase}`}>
                       {icono} {r.calificacion} - "{resaltado(r.comentario, busqueda)}"
                     </p>

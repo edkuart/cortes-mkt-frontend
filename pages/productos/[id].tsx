@@ -9,6 +9,7 @@ import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import Link from 'next/link';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+import AgregarAFavoritos from '@/components/Producto/AgregarAFavoritos';
 
 interface Producto {
   id: number;
@@ -39,6 +40,7 @@ export default function ProductoPublicoPage() {
   const [loading, setLoading] = useState(true);
   const [filtro, setFiltro] = useState<'todas' | 'positivas' | 'neutras' | 'negativas'>('todas');
   const pdfRef = useRef<HTMLDivElement>(null);
+  const usuario = { id: 1 }; // 🔐 Simulado
 
   useEffect(() => {
     if (!router.isReady || !id) return;
@@ -101,6 +103,8 @@ export default function ProductoPublicoPage() {
         </nav>
 
         <ProductoVista producto={producto} />
+
+        <AgregarAFavoritos productoId={producto.id} usuarioId={usuario.id} />
 
         <div className="flex flex-wrap gap-4 items-center">
           <button

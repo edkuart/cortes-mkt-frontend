@@ -8,6 +8,7 @@ import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import { LineChart, Line } from 'recharts';
+import Link from 'next/link';
 import ResumenVentas from '@/components/DashboardVendedor/ResumenVentas';
 import ResumenRanking from '@/components/DashboardVendedor/ResumenRanking';
 import TopClientes from '@/components/DashboardVendedor/TopClientes';
@@ -185,6 +186,8 @@ export default function DashboardVendedor() {
     (!fechaFin || !dayjs(p.createdAt).isAfter(fechaFin))
   );
 
+  const hayPedidosFiltrados = pedidosFiltrados.length > 0;
+
   const totalVentas = pedidosFiltrados.reduce((sum, p) => sum + p.total, 0);
   const clientesTotales = new Set(pedidosFiltrados.map(p => p.comprador?.nombreCompleto)).size;
   const promedioPorCliente = clientesTotales ? totalVentas / clientesTotales : 0;
@@ -236,6 +239,16 @@ export default function DashboardVendedor() {
     p.detalles?.some(d => d.producto?.nombre?.toLowerCase().includes(busqueda.toLowerCase()))
   );
 
+  if (!isAuthenticated() || !user || user.rol !== 'vendedor') {
+  return (
+    <div className="flex items-center justify-center min-h-[60vh]">
+      <p className="text-gray-500 text-lg">
+        ⛔ Acceso no autorizado o sesión expirada.
+      </p>
+    </div>
+  );
+}
+
 const totalPaginas = Math.ceil((productosFiltrados?.length || 0) / productosPorPagina);
 const productosPaginados = productosFiltrados?.slice(
   (paginaActual - 1) * productosPorPagina,
@@ -273,6 +286,24 @@ const cambiarPagina = (nuevaPagina: number) => {
         </label>
         <button onClick={restablecerFechas} className="px-3 py-1 bg-gray-300 rounded hover:bg-gray-400 text-sm">Restablecer fechas</button>
       </div>
+
+      <div className="mb-4 flex gap-4">
+        <Link href="/productos/crear" className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
+          ➕ Crear producto
+        </Link>
+        <Link href={`/vendedor/perfil-vendedor/${user?.id}`} className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+          👤 Ver perfil público
+        </Link>
+        <Link href="/productos/historial" className="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700">
+          📜 Historial de productos
+        </Link>
+      </div>
+
+      {!hayPedidosFiltrados && (
+        <div className="bg-yellow-100 text-yellow-800 p-4 rounded mb-4">
+          ⚠️ No has recibido pedidos en el rango seleccionado. ¡Probá extender el periodo!
+        </div>
+      )}
 
       <button
         onClick={enviarCorreoPrueba}
@@ -523,6 +554,12 @@ const cambiarPagina = (nuevaPagina: number) => {
           {sinPedidosRecientes && (
             <div className="col-span-1 md:col-span-2 bg-yellow-100 p-4 border-l-4 border-yellow-500 text-yellow-800">
               ⚠️ No has recibido pedidos en los últimos 7 días. Considerá hacer una promoción o revisar tu stock.
+            </div>
+          )}
+
+          {resenas.length === 0 && (
+            <div className="bg-yellow-50 text-yellow-800 p-4 rounded mb-4">
+              ⭐ Aún no tienes reseñas. Invita a tus compradores a dejar su opinión.
             </div>
           )}
 

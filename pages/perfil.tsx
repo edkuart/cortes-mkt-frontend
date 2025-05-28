@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import InputText from '@/components/Form/InputText';
+import InputArchivo from '@/components/Form/InputArchivo';
 import { useAuth } from '@/hooks/useAuth';
 import toast from 'react-hot-toast';
 
@@ -184,31 +185,21 @@ const PerfilPage = () => {
           type="password"
         />
 
-        <div
-          onDragOver={(e) => e.preventDefault()}
-          onDrop={(e) => {
-            e.preventDefault();
-            const archivo = e.dataTransfer.files?.[0];
-            if (archivo) handleChange('fotoPerfil', archivo);
-          }}
-          className="mb-4 w-full border-2 border-dashed border-gray-300 p-4 rounded text-center cursor-pointer hover:bg-gray-100"
-        >
-          <p className="text-sm text-gray-500 mb-2">Arrastra tu imagen aquí o haz clic para subir</p>
-          <input
-            type="file"
-            onChange={(e) => handleChange('fotoPerfil', e.target.files?.[0] || null)}
-            className="w-full"
-          />
-          {preview && (
-            <button
-              type="button"
-              onClick={handleEliminarImagen}
-              className="mt-2 text-sm text-red-500 hover:underline"
-            >
-              Eliminar imagen de perfil
-            </button>
-          )}
-        </div>
+        <InputArchivo
+          label="Subir foto de perfil"
+          name="fotoPerfil"
+          onChange={handleChange}
+        />
+
+        {preview && (
+          <button
+            type="button"
+            onClick={handleEliminarImagen}
+            className="mt-2 text-sm text-red-500 hover:underline"
+          >
+            Eliminar imagen de perfil
+          </button>
+        )}
 
         <div className="mb-4">
           <label htmlFor="rol" className="block text-gray-700 text-sm font-bold mb-2">Rol</label>

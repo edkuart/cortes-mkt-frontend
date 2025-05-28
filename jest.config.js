@@ -1,17 +1,14 @@
-// 📄 jest.config.js
+// 📁 frontend/jest.config.js
 
 module.exports = {
-  testEnvironment: 'jsdom',  // Especifica el entorno de pruebas de jsdom (para trabajar con el DOM)
-  transform: {
-    '^.+\\.(js|jsx|ts|tsx)$': 'babel-jest',  // Transforma los archivos js/tsx con babel-jest
-  },
+  testEnvironment: 'jsdom',
+  setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
   moduleNameMapper: {
-    '^@/(.*)$': '<rootDir>/$1',
-    '\\.(css|less|scss|sass)$': 'identity-obj-proxy',  // Permite importar CSS como módulos
+    '^@/(.*)$': '<rootDir>/$1',  // ✅ ESTA línea es clave
+    '\\.(css|less|scss|sass)$': 'identity-obj-proxy',
   },
-  setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],  // Asegúrate de que la configuración de jest-dom esté cargada
-  transformIgnorePatterns: ['/node_modules/(?!@react-oauth)/'], // Permite transformar librerías de node_modules si es necesario
+  transform: {
+    '^.+\\.(js|jsx|ts|tsx)$': 'babel-jest',
+  },
+  transformIgnorePatterns: ['/node_modules/'],
 };
-
-
-
