@@ -15,7 +15,13 @@ export const useVerificarMensajesNoLeidos = (
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/mensajes/conversaciones`, {
         headers: { Authorization: `Bearer ${token}` },
       });
+
       const data = await res.json();
+
+      if (!Array.isArray(data)) {
+        console.warn('⚠️ La respuesta no es una lista de conversaciones:', data);
+        return;
+      }
 
       const mensajesNoLeidos = data.filter((conv: any) => conv.leido === false);
       actualizarEstado(mensajesNoLeidos.length > 0, mensajesNoLeidos.length);
@@ -24,3 +30,4 @@ export const useVerificarMensajesNoLeidos = (
     }
   }, [token, actualizarEstado]);
 };
+

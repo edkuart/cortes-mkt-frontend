@@ -21,6 +21,8 @@ export const useAuth = () => {
     token: null,
   });
 
+  const [loading, setLoading] = useState(true);
+
   useEffect(() => {
     const token = localStorage.getItem('token');
     const usuario = localStorage.getItem('usuario');
@@ -39,6 +41,8 @@ export const useAuth = () => {
     } else {
       console.warn("⚠️ No hay token o usuario en localStorage.");
     }
+
+    setLoading(false);
   }, []);
 
   const login = (usuario: Usuario, token: string) => {
@@ -56,10 +60,11 @@ export const useAuth = () => {
   const isAuthenticated = () => !!auth.token;
 
   return {
-    user: auth.usuario,       // 🔁 Esto evita conflictos y errores en los componentes
+    user: auth.usuario,
     token: auth.token,
     login,
     logout,
-    isAuthenticated
-  };  
+    isAuthenticated,
+    loading,
+  };
 };

@@ -1,18 +1,23 @@
 // 📁 components/tests/DashboardVendedor.test.tsx
 
 import { render, screen } from '@testing-library/react';
-import { GoogleOAuthProvider } from '@react-oauth/google';
 import DashboardVendedor from '@/pages/vendedor/dashboard-vendedor';
+import { useAuth } from '@/hooks/useAuth';
 
-describe('DashboardVendedor', () => {
-  it('debería mostrar el gráfico de evolución de ventas', async () => {
-    render(
-      <GoogleOAuthProvider clientId="test-client-id">
-        <DashboardVendedor />
-      </GoogleOAuthProvider>
-    );
-    // Verifica que se haya renderizado correctamente
-    expect(screen.getByText(/Dashboard del Vendedor/i)).toBeInTheDocument();
+// Mock para usuario no autenticado
+jest.mock('@/hooks/useAuth', () => ({
+  useAuth: () => ({
+    user: null,
+    isAuthenticated: () => false,
+    token: null,
+  }),
+}));
+
+describe('DashboardVendedor - Acceso no autorizado', () => {
+  it('muestra mensaje si el usuario no está autenticado', () => {
+    render(<DashboardVendedor />);
+    expect(screen.getByText(/acceso no autorizado/i)).toBeInTheDocument();
   });
 });
+
 

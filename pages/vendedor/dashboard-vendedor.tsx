@@ -7,7 +7,6 @@ import dayjs from 'dayjs';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import { GoogleOAuthProvider } from '@react-oauth/google';
-import { LineChart, Line } from 'recharts';
 import Link from 'next/link';
 import ResumenVentas from '@/components/DashboardVendedor/ResumenVentas';
 import ResumenRanking from '@/components/DashboardVendedor/ResumenRanking';
@@ -29,7 +28,7 @@ interface Pedido {
   total: number;
   createdAt: string;
   estadoTexto: string;
-  categoria: string 
+  categoria: string
   comprador?: { nombreCompleto: string };
   detalles: { producto: { nombre: string }; cantidad: number }[];
 }
@@ -67,6 +66,8 @@ export default function DashboardVendedor() {
   const [busqueda, setBusqueda] = useState('');
   const [filtroCategoria, setFiltroCategoria] = useState('todos');
   const [paginaActual, setPaginaActual] = useState(1);
+  const [datosGrafico, setDatosGrafico] = useState([]);
+
   const productosPorPagina = 6;
 
 
@@ -119,7 +120,6 @@ export default function DashboardVendedor() {
     });
   };
 
-  
   useEffect(() => {
     if (!isAuthenticated() || !user) return;
     setLoading(true);
@@ -173,14 +173,14 @@ export default function DashboardVendedor() {
         contenido: 'Este es un correo de prueba enviado desde tu panel.',
       }),
     });
-  
+
     if (res.ok) {
       toast.success('Correo enviado correctamente');
     } else {
       toast.error('Error al enviar el correo');
     }
   };
-  
+
   const pedidosFiltrados = pedidos.filter(p =>
     (!fechaInicio || !dayjs(p.createdAt).isBefore(fechaInicio)) &&
     (!fechaFin || !dayjs(p.createdAt).isAfter(fechaFin))
@@ -234,32 +234,32 @@ export default function DashboardVendedor() {
   const promedioResenas = resenas.length > 0 ? (resenas.reduce((acc, r) => acc + r.calificacion, 0) / resenas.length) : 0;
 
   const productosFiltrados = pedidos
-  ?.filter(p =>
-    (filtroCategoria === 'todos' || p.categoria === filtroCategoria) &&
-    p.detalles?.some(d => d.producto?.nombre?.toLowerCase().includes(busqueda.toLowerCase()))
-  );
+    ?.filter(p =>
+      (filtroCategoria === 'todos' || p.categoria === filtroCategoria) &&
+      p.detalles?.some(d => d.producto?.nombre?.toLowerCase().includes(busqueda.toLowerCase()))
+    );
 
   if (!isAuthenticated() || !user || user.rol !== 'vendedor') {
-  return (
-    <div className="flex items-center justify-center min-h-[60vh]">
-      <p className="text-gray-500 text-lg">
-        ⛔ Acceso no autorizado o sesión expirada.
-      </p>
-    </div>
-  );
-}
-
-const totalPaginas = Math.ceil((productosFiltrados?.length || 0) / productosPorPagina);
-const productosPaginados = productosFiltrados?.slice(
-  (paginaActual - 1) * productosPorPagina,
-  paginaActual * productosPorPagina
-);
-
-const cambiarPagina = (nuevaPagina: number) => {
-  if (nuevaPagina >= 1 && nuevaPagina <= totalPaginas) {
-    setPaginaActual(nuevaPagina);
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <p className="text-gray-500 text-lg">
+          ⛔ Acceso no autorizado o sesión expirada.
+        </p>
+      </div>
+    );
   }
-};
+
+  const totalPaginas = Math.ceil((productosFiltrados?.length || 0) / productosPorPagina);
+  const productosPaginados = productosFiltrados?.slice(
+    (paginaActual - 1) * productosPorPagina,
+    paginaActual * productosPorPagina
+  );
+
+  const cambiarPagina = (nuevaPagina: number) => {
+    if (nuevaPagina >= 1 && nuevaPagina <= totalPaginas) {
+      setPaginaActual(nuevaPagina);
+    }
+  };
 
 
   return (
@@ -321,202 +321,202 @@ const cambiarPagina = (nuevaPagina: number) => {
 
       <div className="mb-4 flex flex-wrap items-center gap-4">
         <label>Categorías:
-            <select
+          <select
             multiple
             value={categoriasSeleccionadas}
             onChange={e => {
-                const options = Array.from(e.target.selectedOptions).map(opt => opt.value);
-                setCategoriasSeleccionadas(options);
+              const options = Array.from(e.target.selectedOptions).map(opt => opt.value);
+              setCategoriasSeleccionadas(options);
             }}
             className="ml-2 border px-2 py-1 rounded"
             size={4}
-            >
+          >
             <option value="corte">Cortes</option>
             <option value="traje_completo">Trajes completos</option>
             <option value="accesorio">Accesorios</option>
             <option value="combo">Combos</option>
-            </select>
+          </select>
         </label>
 
         <label>Año:
-            <select
+          <select
             value={fechaInicio.slice(0, 4)}
             onChange={e => {
-                const nuevoAnio = e.target.value;
-                setFechaInicio(`${nuevoAnio}-01-01`);
-                setFechaFin(`${nuevoAnio}-12-31`);
+              const nuevoAnio = e.target.value;
+              setFechaInicio(`${nuevoAnio}-01-01`);
+              setFechaFin(`${nuevoAnio}-12-31`);
             }}
             className="ml-2 border px-2 py-1 rounded"
-            >
+          >
             {Array.from({ length: 5 }, (_, i) => {
-                const year = new Date().getFullYear() - i;
-                return <option key={year} value={year}>{year}</option>;
+              const year = new Date().getFullYear() - i;
+              return <option key={year} value={year}>{year}</option>;
             })}
-            </select>
+          </select>
         </label>
 
         <button
-            onClick={() => {
+          onClick={() => {
             const chart = document.getElementById('grafico-evolucion');
             if (!chart) return;
             html2canvas(chart).then(canvas => {
-                const link = document.createElement('a');
-                link.download = 'grafico-evolucion-mensual.png';
-                link.href = canvas.toDataURL();
-                link.click();
+              const link = document.createElement('a');
+              link.download = 'grafico-evolucion-mensual.png';
+              link.href = canvas.toDataURL();
+              link.click();
             });
-            }}
-            className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700"
+          }}
+          className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700"
         >
-            📸 Descargar gráfica mensual
+          📸 Descargar gráfica mensual
         </button>
-        </div>
+      </div>
 
-        <div className="flex flex-wrap gap-4 mb-4 justify-center md:justify-start">
-          <input
-            type="text"
-            placeholder="Buscar producto..."
-            value={busqueda}
-            onChange={(e) => {
-              setBusqueda(e.target.value);
-              setPaginaActual(1);
-            }}
-            className="border px-2 py-1 rounded w-full sm:w-64"
-          />
-
-          <label className="text-sm">
-            Categoría:
-            <select
-              className="ml-2 border rounded px-2 py-1"
-              value={filtroCategoria}
-              onChange={e => {
-                setFiltroCategoria(e.target.value);
-                setPaginaActual(1);
-              }}
-            >
-              <option value="todos">Todas</option>
-              <option value="corte">Corte</option>
-              <option value="traje_completo">Traje completo</option>
-              <option value="accesorio">Accesorio</option>
-              <option value="combo">Combo</option>
-            </select>
-          </label>
-        </div>
-
-        {productosPaginados?.length ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-            {productosPaginados.map(p => (
-              <div key={p.id} className="border p-4 rounded shadow bg-white">
-                <p className="font-semibold">{p.detalles[0]?.producto?.nombre || 'Sin nombre'}</p>
-                <p className="text-sm text-gray-600">Q{p.total.toFixed(2)} - {dayjs(p.createdAt).format('D [de] MMMM')}</p>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <p className="text-center text-gray-500">No se encontraron productos.</p>
-        )}
-
-        <div className="flex justify-center gap-2 mt-6">
-          <button
-            className="px-3 py-1 rounded bg-gray-200 hover:bg-gray-300"
-            onClick={() => cambiarPagina(paginaActual - 1)}
-            disabled={paginaActual === 1}
-          >
-            ← Anterior
-          </button>
-          <span className="px-4 py-1 text-sm text-gray-600">
-            Página {paginaActual} de {totalPaginas}
-          </span>
-          <button
-            className="px-3 py-1 rounded bg-gray-200 hover:bg-gray-300"
-            onClick={() => cambiarPagina(paginaActual + 1)}
-            disabled={paginaActual === totalPaginas}
-          >
-            Siguiente →
-          </button>
-        </div>
-          
-        <GoogleOAuthProvider clientId="test-client-id">
-          <div>
-            {/* Todo el contenido de tu dashboard */}
-          </div>
-        </GoogleOAuthProvider>
-
-        <GraficoEvolucion datos={
-          Object.entries(ventasPorMes)
-            .map(([mes]) => {
-              const pedidosMes = pedidos.filter(p => {
-                const esDelMes = dayjs(p.createdAt).format('YYYY-MM') === mes;
-                if (categoriasSeleccionadas.length === 0) return esDelMes;
-                return esDelMes && p.detalles.some(d => {
-                  const categoria = (d.producto as any).categoria;
-                  return categoriasSeleccionadas.includes(categoria);
-                });
-              });
-
-              const totalMes = pedidosMes.reduce((acc, p) => acc + p.total, 0);
-
-              const resenasMes = resenas.filter(r => dayjs(r.createdAt).format('YYYY-MM') === mes);
-              const promedioCalif = resenasMes.length > 0
-                ? resenasMes.reduce((sum, r) => sum + r.calificacion, 0) / resenasMes.length
-                : null;
-
-              return {
-                mes,
-                total: totalMes,
-                pedidos: pedidosMes.length,
-                calificacion: promedioCalif
-              };
-            })
-        } año={fechaInicio.slice(0, 4)} />
-            
-        <TablaDevoluciones
-          devoluciones={devoluciones}
-          onAceptar={aceptarDevolucion}
-          onRechazar={rechazarDevolucion}
+      <div className="flex flex-wrap gap-4 mb-4 justify-center md:justify-start">
+        <input
+          type="text"
+          placeholder="Buscar producto..."
+          value={busqueda}
+          onChange={(e) => {
+            setBusqueda(e.target.value);
+            setPaginaActual(1);
+          }}
+          className="border px-2 py-1 rounded w-full sm:w-64"
         />
 
-          <button
-            onClick={async () => {
-              const res = await fetch('http://localhost:4000/api/notificaciones/correo', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                  asunto: '📨 Correo de prueba desde el marketplace',
-                  contenido: 'Este es un correo de prueba enviado desde el frontend.'
-                }),
-              });
-
-              if (res.ok) {
-              toast.success('Correo enviado correctamente');
-              } else {
-                toast.error('Error al enviar el correo');
-              }
+        <label className="text-sm">
+          Categoría:
+          <select
+            className="ml-2 border rounded px-2 py-1"
+            value={filtroCategoria}
+            onChange={e => {
+              setFiltroCategoria(e.target.value);
+              setPaginaActual(1);
             }}
-              className="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 mt-4"
-            >
-              📧 Enviar correo de prueba
-            </button>
+          >
+            <option value="todos">Todas</option>
+            <option value="corte">Corte</option>
+            <option value="traje_completo">Traje completo</option>
+            <option value="accesorio">Accesorio</option>
+            <option value="combo">Combo</option>
+          </select>
+        </label>
+      </div>
 
-            <div className="flex flex-wrap items-center gap-4 mb-4">
-            <label>
-              Desde:
-              <input type="date" value={filtroFechaInicio} onChange={e => setFiltroFechaInicio(e.target.value)} className="ml-2 border px-2 py-1 rounded" />
-            </label>
-            <label>
-              Hasta:
-              <input type="date" value={filtroFechaFin} onChange={e => setFiltroFechaFin(e.target.value)} className="ml-2 border px-2 py-1 rounded" />
-            </label>
-            <label>
-              Tipo:
-              <select value={filtroTipo} onChange={e => setFiltroTipo(e.target.value)} className="ml-2 border px-2 py-1 rounded">
-                <option value="todas">Todas</option>
-                <option value="positivas">Positivas (≥ 4)</option>
-                <option value="regulares">Regulares (= 3)</option>
-                <option value="negativas">Negativas (≤ 2)</option>
-              </select>
-            </label>
-          </div>
+      {productosPaginados?.length ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+          {productosPaginados.map(p => (
+            <div key={p.id} className="border p-4 rounded shadow bg-white">
+              <p className="font-semibold">{p.detalles[0]?.producto?.nombre || 'Sin nombre'}</p>
+              <p className="text-sm text-gray-600">Q{p.total.toFixed(2)} - {dayjs(p.createdAt).format('D [de] MMMM')}</p>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <p className="text-center text-gray-500">No se encontraron productos.</p>
+      )}
+
+      <div className="flex justify-center gap-2 mt-6">
+        <button
+          className="px-3 py-1 rounded bg-gray-200 hover:bg-gray-300"
+          onClick={() => cambiarPagina(paginaActual - 1)}
+          disabled={paginaActual === 1}
+        >
+          ← Anterior
+        </button>
+        <span className="px-4 py-1 text-sm text-gray-600">
+          Página {paginaActual} de {totalPaginas}
+        </span>
+        <button
+          className="px-3 py-1 rounded bg-gray-200 hover:bg-gray-300"
+          onClick={() => cambiarPagina(paginaActual + 1)}
+          disabled={paginaActual === totalPaginas}
+        >
+          Siguiente →
+        </button>
+      </div>
+
+      <GoogleOAuthProvider clientId="test-client-id">
+        <div>
+          {/* Todo el contenido de tu dashboard */}
+        </div>
+      </GoogleOAuthProvider>
+
+      <GraficoEvolucion datos={
+        Object.entries(ventasPorMes)
+          .map(([mes]) => {
+            const pedidosMes = pedidos.filter(p => {
+              const esDelMes = dayjs(p.createdAt).format('YYYY-MM') === mes;
+              if (categoriasSeleccionadas.length === 0) return esDelMes;
+              return esDelMes && p.detalles.some(d => {
+                const categoria = (d.producto as any).categoria;
+                return categoriasSeleccionadas.includes(categoria);
+              });
+            });
+
+            const totalMes = pedidosMes.reduce((acc, p) => acc + p.total, 0);
+
+            const resenasMes = resenas.filter(r => dayjs(r.createdAt).format('YYYY-MM') === mes);
+            const promedioCalif = resenasMes.length > 0
+              ? resenasMes.reduce((sum, r) => sum + r.calificacion, 0) / resenasMes.length
+              : null;
+
+            return {
+              mes,
+              total: totalMes,
+              pedidos: pedidosMes.length,
+              calificacion: promedioCalif
+            };
+          })
+      } año={fechaInicio.slice(0, 4)} />
+
+      <TablaDevoluciones
+        devoluciones={devoluciones}
+        onAceptar={aceptarDevolucion}
+        onRechazar={rechazarDevolucion}
+      />
+
+      <button
+        onClick={async () => {
+          const res = await fetch('http://localhost:4000/api/notificaciones/correo', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              asunto: '📨 Correo de prueba desde el marketplace',
+              contenido: 'Este es un correo de prueba enviado desde el frontend.'
+            }),
+          });
+
+          if (res.ok) {
+            toast.success('Correo enviado correctamente');
+          } else {
+            toast.error('Error al enviar el correo');
+          }
+        }}
+        className="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 mt-4"
+      >
+        📧 Enviar correo de prueba
+      </button>
+
+      <div className="flex flex-wrap items-center gap-4 mb-4">
+        <label>
+          Desde:
+          <input type="date" value={filtroFechaInicio} onChange={e => setFiltroFechaInicio(e.target.value)} className="ml-2 border px-2 py-1 rounded" />
+        </label>
+        <label>
+          Hasta:
+          <input type="date" value={filtroFechaFin} onChange={e => setFiltroFechaFin(e.target.value)} className="ml-2 border px-2 py-1 rounded" />
+        </label>
+        <label>
+          Tipo:
+          <select value={filtroTipo} onChange={e => setFiltroTipo(e.target.value)} className="ml-2 border px-2 py-1 rounded">
+            <option value="todas">Todas</option>
+            <option value="positivas">Positivas (≥ 4)</option>
+            <option value="regulares">Regulares (= 3)</option>
+            <option value="negativas">Negativas (≤ 2)</option>
+          </select>
+        </label>
+      </div>
 
       {loading ? <p>Cargando...</p> : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -543,7 +543,7 @@ const cambiarPagina = (nuevaPagina: number) => {
 
           <TopClientes
             topClientes={topClientes}
-            totalVentasGlobal={totalVentas} // 💡 Esta es la prop nueva
+            totalVentasGlobal={totalVentas}
           />
 
           <TopProductos
