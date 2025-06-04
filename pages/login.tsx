@@ -1,4 +1,4 @@
-// 📁 pages/login.tsx
+// 📁 pages/login.tsx (versión completa corregida)
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
@@ -15,7 +15,7 @@ import { motion } from 'framer-motion';
 
 const LoginPage = () => {
   const router = useRouter();
-  const { login } = useAuth();
+  const { login, isAuthenticated } = useAuth();
 
   const [correo, setCorreo] = useState('');
   const [contraseña, setContraseña] = useState('');
@@ -31,10 +31,30 @@ const LoginPage = () => {
     const usuario = localStorage.getItem('usuario') || sessionStorage.getItem('usuario');
 
     if (token && usuario) {
-      const userParsed = JSON.parse(usuario);
-      login(userParsed, token);
-      toast.success('Sesión restaurada');
-      router.push(userParsed.rol === 'vendedor' ? '/vendedor/dashboard-vendedor' : '/');
+      try {
+        const userParsed = JSON.parse(usuario);
+
+        if (!isAuthenticated()) {
+          login(userParsed, token);
+          toast.success('Sesión restaurada');
+        }
+
+        if (router.pathname === '/login') {
+          if (userParsed.rol === 'admin') {
+            router.push('/admin/dashboard');
+          } else if (userParsed.rol === 'vendedor') {
+            router.push('/vendedor/dashboard-vendedor');
+          } else {
+            router.push('/');
+          }
+        }
+      } catch (err) {
+        console.warn('⚠️ Usuario inválido en memoria. Borrando...');
+        localStorage.removeItem('token');
+        localStorage.removeItem('usuario');
+        sessionStorage.removeItem('token');
+        sessionStorage.removeItem('usuario');
+      }
     }
   }, []);
 
