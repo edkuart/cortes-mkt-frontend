@@ -7,7 +7,7 @@ import InputText from '@/components/Form/InputText';
 import SelectRol from '@/components/Form/SelectRol';
 import InputArchivo from '@/components/Form/InputArchivo';
 import { GoogleLogin } from '@react-oauth/google';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/context/AuthContext';
 import { useFormularioRegistro } from '@/hooks/useFormularioRegistro';
 import usePasswordStrength from '@/hooks/usePasswordStrength';
 import validarRegistro from '@/utils/validarRegistro';

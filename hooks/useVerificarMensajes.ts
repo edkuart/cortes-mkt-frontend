@@ -1,7 +1,8 @@
 // 📁 hooks/useVerificarMensajes.ts
 
 import { useCallback } from 'react';
-import { useAuth } from './useAuth';
+import { useAuth } from '@/context/AuthContext';
+
 
 export const useVerificarMensajesNoLeidos = (
   actualizarEstado: (hayNoLeidos: boolean, cantidad: number) => void

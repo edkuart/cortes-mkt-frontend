@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import InputText from '@/components/Form/InputText';
 import InputArchivo from '@/components/Form/InputArchivo';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/context/AuthContext';
 import toast from 'react-hot-toast';
 
 const PerfilPage = () => {

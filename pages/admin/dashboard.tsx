@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 // import { useRouter } from 'next/router'; // No se está usando, se puede quitar si no hay planes para ello
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/context/AuthContext';
 import Layout from '@/components/Layout';
 import Head from 'next/head';
 import ResumenKPI from '@/components/Admin/ResumenKPI';

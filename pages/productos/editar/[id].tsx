@@ -4,6 +4,8 @@ import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import ProductoForm from '@/components/ProductoForm';
+import { API_BASE_URL } from "@/utils/api"; // ajusta el path si es necesario
+
 
 const EditarProductoPage = () => {
   const router = useRouter();
