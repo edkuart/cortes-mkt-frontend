@@ -1,7 +1,7 @@
 // 📁 frontend/pages/vendedor/panel-vendedor.tsx
 
 import { useEffect, useState } from 'react';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 

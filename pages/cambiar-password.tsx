@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/router';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/context/AuthContext';
 import toast from 'react-hot-toast';
 import FondoAnimado from '@/components/FondoAnimado';
 import TarjetaGlass from '@/components/TarjetaGlass';

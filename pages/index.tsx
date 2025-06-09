@@ -4,7 +4,7 @@ import Image from "next/image";
 import ProductoForm from "../components/ProductoForm";
 import IAResponseBox from "../components/IAResponseBox"; 
 import { useState, useEffect, useRef } from "react";
-import { useAuth } from "../hooks/useAuth";
+import { useAuth } from '@/context/AuthContext';
 import { useRouter } from "next/router";
 import FiltroCalificacion from "../components/FiltroCalificacion";
 import { filtrarPorCalificacion } from "../utils/filtros";

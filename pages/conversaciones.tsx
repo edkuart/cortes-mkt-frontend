@@ -1,7 +1,7 @@
 // 📁 pages/conversaciones.tsx
 
 import { useEffect, useState } from 'react';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/context/AuthContext';
 import { useMensajesContext } from '@/context/MensajesContext';
 import { useVerificarMensajesNoLeidos } from '@/hooks/useVerificarMensajes';
 import ConversacionCard from '@/components/ConversacionCard';

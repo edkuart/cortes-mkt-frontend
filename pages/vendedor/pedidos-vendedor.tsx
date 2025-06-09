@@ -1,7 +1,7 @@
 // 📁 frontend/pages/vendedor/pedidos-vendedor.tsx
 
 import { useEffect, useState } from 'react';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/context/AuthContext';
 import toast, { Toaster } from 'react-hot-toast';
 import * as XLSX from 'xlsx';
 

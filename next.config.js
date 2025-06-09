@@ -1,5 +1,6 @@
 // next.config.js
 module.exports = {
+  reactStrictMode: true,
   async rewrites() {
     return [
       {
@@ -8,11 +9,4 @@ module.exports = {
       },
     ];
   },
-  eslint: {
-    ignoreDuringBuilds: true, 
-  },
-  typescript: {
-    ignoreBuildErrors: true, 
-  },
 };
-  

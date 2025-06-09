@@ -1,7 +1,7 @@
 // 📄 pages/responder-resenas.tsx
 
 import { useEffect, useState } from 'react';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/context/AuthContext';
 import toast from 'react-hot-toast';
 
 interface Resena {

@@ -1,7 +1,7 @@
 // 📁 pages/vendedor/mis-productos.tsx
 
 import { useEffect, useState } from 'react';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/context/AuthContext';
 import ProductoCard from '@/components/ProductoCard';
 import Link from 'next/link';
 import toast from 'react-hot-toast';

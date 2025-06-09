@@ -1,7 +1,7 @@
 // 📁 pages/productos/crear.tsx
 
 import { useRouter } from 'next/router';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/context/AuthContext';
 import toast from 'react-hot-toast';
 import ProductoForm from '@/components/ProductoForm';
 

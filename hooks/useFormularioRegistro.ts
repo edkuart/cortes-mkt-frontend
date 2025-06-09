@@ -1,21 +1,25 @@
 // 📁 hooks/useFormularioRegistro.ts
 
 import { useState } from 'react';
+import { FormularioRegistro } from '@/types/registro'; // ajusta la ruta si es necesario
 
 export const useFormularioRegistro = () => {
-  const [formulario, setFormulario] = useState({
+  const [formulario, setFormulario] = useState<FormularioRegistro>({
     nombreCompleto: '',
     correo: '',
     contraseña: '',
     confirmarContrasena: '',
     rol: 'comprador',
-    fotoDPIFrente: null as File | null,
-    fotoDPIReverso: null as File | null,
-    selfieConDPI: null as File | null,
-    licenciaConducir: null as File | null,
+    fotoDPIFrente: null,
+    fotoDPIReverso: null,
+    selfieConDPI: null,
+    licenciaConducir: null,
   });
 
-  const handleChange = (campo: string, valor: any) => {
+  const handleChange = <K extends keyof FormularioRegistro>(
+    campo: K,
+    valor: FormularioRegistro[K]
+  ) => {
     setFormulario((prev) => ({ ...prev, [campo]: valor }));
   };
 

@@ -15,7 +15,7 @@ import PaginadorProductos from '@/components/PerfilVendedor/PaginadorProductos';
 import ReseñasRecientes from '@/components/PerfilVendedor/ResenasRecientes';
 import { toast } from 'react-hot-toast';
 import { FaUserTie, FaUserTag } from 'react-icons/fa';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/context/AuthContext';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import dayjs from 'dayjs';

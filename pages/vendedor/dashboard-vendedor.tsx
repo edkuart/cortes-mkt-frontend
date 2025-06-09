@@ -1,7 +1,7 @@
 //frontend/pages/vendedor/ 📊 dashboard-vendedor.tsx
 
 import { useEffect, useState } from 'react';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/context/AuthContext';
 import toast, { Toaster } from 'react-hot-toast';
 import dayjs from 'dayjs';
 import jsPDF from 'jspdf';
